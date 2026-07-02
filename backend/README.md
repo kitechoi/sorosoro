@@ -114,6 +114,8 @@ cd backend
 ./gradlew test
 ```
 
+Repository 매핑 테스트는 Testcontainers 기반 PostgreSQL을 사용합니다. 테스트 실행 전 Docker Desktop 또는 Docker 데몬이 실행 중이어야 합니다.
+
 Gradle Wrapper가 없는 환경에서는 다음 명령을 사용합니다.
 
 ```bash
