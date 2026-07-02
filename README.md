@@ -264,6 +264,8 @@ User
 sorosoro/
 ├── README.md
 ├── .gitignore
+├── .env.example
+├── docker-compose.yml
 ├── backend/
 ├── frontend/
 └── docs/
