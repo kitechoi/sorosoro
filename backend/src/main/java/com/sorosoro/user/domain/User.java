@@ -53,4 +53,11 @@ public class User extends BaseTimeEntity {
     public boolean isDeleted() {
         return status == UserStatus.DELETED;
     }
+
+    public void withdraw() {
+        if (isDeleted()) {
+            return;
+        }
+        this.status = UserStatus.DELETED;
+    }
 }
