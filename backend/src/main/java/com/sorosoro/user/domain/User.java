@@ -49,4 +49,8 @@ public class User extends BaseTimeEntity {
         this.role = role == null ? UserRole.USER : role;
         this.status = status == null ? UserStatus.ACTIVE : status;
     }
+
+    public boolean isDeleted() {
+        return status == UserStatus.DELETED;
+    }
 }
