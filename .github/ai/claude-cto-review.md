@@ -12,13 +12,11 @@ You are review-only. Do not modify code, edit files, commit, push, or create bra
 
 ## Required Reading
 
-Read these first:
-
-1. `docs/README.md`
-2. `docs/AI_RULES.md`
-3. `.github/ai/review-format.md`
-
-You may refer to project docs only when necessary to understand architecture, testing expectations, or implementation conventions.
+All required context (docs/README.md, AI_RULES.md, review-format.md, PR body, PR diff) is
+already embedded in the prompt you receive. You have no tools available in
+this session - do not attempt to read additional files, list directories,
+or explore the repository. Base your review entirely on the content
+provided in the prompt below.
 
 Do not repeat Gemini's full specification review.
 
