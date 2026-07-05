@@ -1,0 +1,110 @@
+name: Promote pre-dev to dev
+
+on:
+  push:
+    branches:
+      - pre-dev
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: read
+
+concurrency:
+  group: promote-pre-dev-to-dev
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: promote-pre-dev-to-dev
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+
+    steps:
+      - name: Checkout pre-dev
+        uses: actions/checkout@v4
+        with:
+          ref: pre-dev
+          fetch-depth: 0
+
+      - name: Build AI review log source table
+        id: body
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git fetch origin dev pre-dev
+
+          {
+            echo "## Summary"
+            echo
+            echo "Automated promotion PR from \`pre-dev\` to \`dev\`."
+            echo
+            echo "## AI Review Log Source"
+            echo
+            echo "| Ticket PR | Ticket ID | Gemini Decision |"
+            echo "|---|---|---|"
+          } > pr-body.md
+
+          seen_prs=""
+          while IFS= read -r sha; do
+            pr_number="$(gh api \
+              -H "Accept: application/vnd.github.groot-preview+json" \
+              "repos/$REPO/commits/$sha/pulls" \
+              --jq '.[0].number // empty' || true)"
+
+            if [ -z "$pr_number" ]; then
+              continue
+            fi
+
+            case " $seen_prs " in
+              *" $pr_number "*)
+                continue
+                ;;
+            esac
+            seen_prs="$seen_prs $pr_number"
+
+            pr_body="$(gh pr view "$pr_number" --json body --jq '.body // ""')"
+            ticket_id="$(printf '%s\n' "$pr_body" | sed -nE 's/^-?[[:space:]]*Ticket ID:[[:space:]]*([^[:space:]].*)$/\1/p' | head -n 1)"
+            ticket_id="${ticket_id:-unknown}"
+
+            comments="$(gh api "repos/$REPO/issues/$pr_number/comments" --jq '.[].body' || true)"
+            decision="$(printf '%s\n' "$comments" | grep -Eo '\[(APPROVE|REJECT)\]' | tail -n 1 | tr -d '[]' || true)"
+            decision="${decision:-unknown}"
+
+            echo "| #$pr_number | $ticket_id | $decision |" >> pr-body.md
+          done < <(git log --format=%H origin/dev..origin/pre-dev)
+
+          {
+            echo
+            echo "## Notes"
+            echo
+            echo "- This PR is created or updated automatically whenever \`pre-dev\` changes."
+            echo "- Claude CTO review is handled by the \`claude-cto-review\` check."
+          } >> pr-body.md
+
+      - name: Create or update promotion PR
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          existing_pr="$(gh pr list \
+            --base dev \
+            --head pre-dev \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')"
+
+          if [ -n "$existing_pr" ]; then
+            gh pr edit "$existing_pr" \
+              --title "chore: promote pre-dev to dev" \
+              --body-file pr-body.md
+          else
+            gh pr create \
+              --base dev \
+              --head pre-dev \
+              --title "chore: promote pre-dev to dev" \
+              --body-file pr-body.md
+          fi
