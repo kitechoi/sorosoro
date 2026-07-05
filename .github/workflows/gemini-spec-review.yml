@@ -12,7 +12,7 @@ on:
       - edited
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
   issues: write
   checks: read
@@ -54,9 +54,14 @@ jobs:
           fi
 
           docs_only=true
+          sensitive_review_system_change=false
           while IFS= read -r file; do
             case "$file" in
-              docs/*|*.md|.github/ai/*)
+              .github/ai/*|.github/workflows/*)
+                docs_only=false
+                sensitive_review_system_change=true
+                ;;
+              docs/*|README.md|backend/README.md)
                 ;;
               *)
                 docs_only=false
@@ -65,6 +70,22 @@ jobs:
           done <<< "$files"
 
           echo "docs_only=$docs_only" >> "$GITHUB_OUTPUT"
+          echo "sensitive_review_system_change=$sensitive_review_system_change" >> "$GITHUB_OUTPUT"
+
+      - name: Require human review for review system changes
+        if: steps.scope.outputs.sensitive_review_system_change == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gh pr edit "$PR_NUMBER" --add-label "needs-human-review"
+          cat > review-system-human-review.md <<'EOF'
+          This PR changes AI review prompts or GitHub workflow files.
+
+          Gemini automatic review and auto-merge are intentionally disabled for review-system changes. Human review is required.
+          EOF
+          gh pr comment "$PR_NUMBER" --body-file review-system-human-review.md
+          exit 1
 
       - name: Extract ticket ID
         id: ticket
@@ -194,7 +215,7 @@ jobs:
           fi
 
       - name: Handle Gemini unavailable
-        if: failure() && steps.scope.outputs.docs_only != 'true'
+        if: failure() && steps.scope.outputs.docs_only != 'true' && steps.gemini.outcome == 'failure'
         shell: bash
         run: |
           set -euo pipefail
@@ -267,6 +288,23 @@ jobs:
 
           echo "Timed out waiting for ci check on $HEAD_SHA."
           exit 1
+
+      - name: Require human auto-merge confirmation
+        if: steps.decision.outputs.decision == 'approve'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name' | grep -qx 'gemini-auto-merge-ok'; then
+            gh pr edit "$PR_NUMBER" --add-label "needs-human-review"
+            cat > gemini-auto-merge-blocked.md <<'EOF'
+          Gemini returned [APPROVE] and CI passed, but automatic merge is blocked until a human adds the `gemini-auto-merge-ok` label.
+
+          This extra gate prevents untrusted PR content or prompt injection from turning an LLM text response into an immediate merge.
+          EOF
+            gh pr comment "$PR_NUMBER" --body-file gemini-auto-merge-blocked.md
+            exit 1
+          fi
 
       - name: Merge approved PR into pre-dev
         if: steps.decision.outputs.decision == 'approve'
