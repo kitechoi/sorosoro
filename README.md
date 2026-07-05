@@ -1,5 +1,7 @@
 # 소로소로(SOROSORO)
 
+[![CI](https://github.com/kitechoi/sorosoro/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/kitechoi/sorosoro/actions/workflows/ci.yml)
+
 > 하루하루 재봉 과정을 기록하는 개인 재봉일기 서비스
 
 소로소로는 개인 재봉 작업을 프로젝트 단위로 관리하고, 날짜별 작업 일지와 원단 정보를 함께 기록할 수 있는 재봉 기록 서비스입니다.
