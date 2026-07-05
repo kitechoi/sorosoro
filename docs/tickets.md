@@ -566,7 +566,7 @@
 
 * **추천 브랜치명:** feature/ticket-be-026
 * **상태:** TODO
-* **선행 티켓:** OPS-004
+* **선행 티켓:** PIPE-004
 * **관련 명세서:** docs/02_SRS.md, docs/03_ADR.md, docs/04_ERD.md, docs/05_Backend_Design.md, docs/06_Architecture.md, docs/07_API.md
 * **체크리스트:**
 
@@ -621,7 +621,7 @@
 
 * **추천 브랜치명:** feature/ticket-be-028
 * **상태:** TODO
-* **선행 티켓:** OPS-004
+* **선행 티켓:** PIPE-004
 * **관련 명세서:** docs/02_SRS.md, docs/04_ERD.md, docs/05_Backend_Design.md, docs/07_API.md
 * **체크리스트:**
 
@@ -986,9 +986,9 @@
 
 ---
 
-## [OPS-001] Gemini 명세 리뷰 워크플로우 구성
+## [PIPE-001] Gemini 명세 리뷰 워크플로우 구성
 
-* **추천 브랜치명:** feature/ticket-ops-001
+* **추천 브랜치명:** feature/ticket-pipe-001
 * **상태:** TODO
 * **관련 명세서:** docs/12_AI_Review_Flow.md, docs/AI_RULES.md, .github/ai/gemini-spec-review.md
 * **체크리스트:**
@@ -1003,9 +1003,9 @@
 
 ---
 
-## [OPS-002] Claude CTO 리뷰 워크플로우 및 2차 PR 자동화 구성
+## [PIPE-002] Claude CTO 리뷰 워크플로우 및 2차 PR 자동화 구성
 
-* **추천 브랜치명:** feature/ticket-ops-002
+* **추천 브랜치명:** feature/ticket-pipe-002
 * **상태:** TODO
 * **관련 명세서:** docs/12_AI_Review_Flow.md, docs/AI_RULES.md, .github/ai/claude-cto-review.md
 * **체크리스트:**
@@ -1021,24 +1021,26 @@
 
 ---
 
-## [OPS-003] 브랜치 보호 및 리뷰 파이프라인 부트스트랩
+## [PIPE-003] 브랜치 보호 및 리뷰 파이프라인 부트스트랩
 
-* **추천 브랜치명:** feature/ticket-ops-003
+* **추천 브랜치명:** feature/ticket-pipe-003
 * **상태:** TODO
 * **관련 명세서:** docs/12_AI_Review_Flow.md, docs/08_Implementation.md
+* **기존 OPS-007 대조:** 1차 감사의 OPS-007(저장소 부트스트랩)은 브랜치 생성, 라벨 생성, GitHub 설정, Secret 등록을 포괄했다. PIPE-003은 같은 저장소 부트스트랩 책임을 계승하되, v2.2 파이프라인 기준으로 `dev` branch protection의 required status checks(`ci`, `claude-cto-review`)와 금지 Secret 부재 확인을 명시해 차이를 둔다. 중복 항목은 이 티켓으로 통합한다.
 * **체크리스트:**
 
   * [ ] pre-dev 브랜치 생성 및 origin push
   * [ ] 12_AI_Review_Flow §11의 라벨 9종 생성
+  * [ ] GitHub repository setting에서 Actions permission 및 PR write 권한 확인
   * [ ] dev branch protection: required status checks `ci`, `claude-cto-review` 설정
   * [ ] GEMINI_API_KEY, CLAUDE_CODE_OAUTH_TOKEN Secrets 등록 절차 문서화
   * [ ] 금지 Secrets(ANTHROPIC_API_KEY, OPENAI_API_KEY) 부재 확인
 
 ---
 
-## [OPS-004] AWS 리소스 프로비저닝
+## [PIPE-004] AWS 리소스 프로비저닝
 
-* **추천 브랜치명:** feature/ticket-ops-004
+* **추천 브랜치명:** feature/ticket-pipe-004
 * **상태:** TODO
 * **관련 명세서:** docs/06_Architecture.md, docs/08_Implementation.md, docs/10_Portfolio_README.md
 * **체크리스트:**
@@ -1280,7 +1282,7 @@
 
 * **추천 브랜치명:** feature/ticket-fe-009
 * **상태:** TODO
-* **선행 티켓:** FE-001, FE-012, OPS-004
+* **선행 티켓:** FE-001, FE-012, PIPE-004
 * **관련 명세서:** docs/07_API.md, docs/11_Wireframe.md
 * **체크리스트:**
 
@@ -1424,7 +1426,7 @@
 
 * **추천 브랜치명:** feature/ticket-qa-001
 * **상태:** TODO
-* **선행 티켓:** OPS-004
+* **선행 티켓:** PIPE-004
 * **관련 명세서:** docs/08_Implementation.md, docs/09_Test_Strategy.md, docs/10_Portfolio_README.md
 * **체크리스트:**
 

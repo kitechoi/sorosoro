@@ -1,8 +1,23 @@
 # AI Review Flow
 
+* **Version:** v2.2
+* **Last Updated:** 2026-07-05
+* **Owner:** SOROSORO maintainer
+* **Status:** Draft before GitHub Actions implementation
+
 This document is the source of truth for the SOROSORO AI review workflow.
 
+## Goal
+
+Preserve the agreed v2.2 workflow in a stable document so Codex, Gemini, Claude, and human reviewers can share one operating contract. Changes to this document must keep branch flow, role boundaries, docs-only policy, round limits, merge gates, labels, and conflict logs explicit.
+
 The goal is to use GPT/Claude Pro subscriptions, low-cost Gemini API review, Codex implementation, and GitHub Actions automation while minimizing Claude API usage and preventing endless AI review loops.
+
+## Version History
+
+| Version | Date | Summary |
+|---|---|---|
+| v2.2 | 2026-07-05 | Cost-optimized AI review flow: `feature/ticket-* -> pre-dev -> dev`, Gemini spec gate, Claude CTO gate, docs-only fast path, round limits, check-run merge gates, labels, and conflict log policy. |
 
 ## 1. Roles
 
