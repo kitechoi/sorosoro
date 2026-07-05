@@ -73,7 +73,7 @@ jobs:
           set -euo pipefail
 
           body="$(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")"
-          ticket_id="$(printf '%s\n' "$body" | sed -nE 's/^- Ticket ID:[[:space:]]*([^[:space:]].*)$/\1/p' | head -n 1)"
+          ticket_id="$(printf '%s\n' "$body" | sed -nE 's/^-?[[:space:]]*Ticket ID:[[:space:]]*([^[:space:]].*)$/\1/p' | head -n 1)"
           ticket_id="${ticket_id%%$'\r'}"
 
           if [ -z "$ticket_id" ] || [ "$ticket_id" = "-" ]; then
