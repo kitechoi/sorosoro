@@ -171,17 +171,19 @@ MVP에서는 다음 기능을 구현하지 않는다.
 
 ```text
 main
-develop
-feature/*
+dev
+pre-dev
+feature/ticket-*
 fix/*
 docs/*
 ```
 
 |브랜치|역할|
 |---|---|
-|main|배포 가능한 안정 버전|
-|develop|개발 통합 브랜치|
-|feature/*|기능 개발|
+|main|배포 가능한 안정 버전. MVP 개발 중에는 사람이 필요 시 반영한다.|
+|dev|AI 리뷰를 통과한 개발 통합 브랜치|
+|pre-dev|Gemini 명세 검증을 통과한 티켓 브랜치를 임시 통합하는 브랜치|
+|feature/ticket-*|티켓 단위 기능 개발|
 |fix/*|버그 수정|
 |docs/*|문서 수정|
 
@@ -189,17 +191,27 @@ docs/*
 
 ## 3.2 브랜치 사용 방식
 
-기능 개발은 `develop`에서 분기한다.
+기능 개발은 하나의 티켓을 기준으로 `feature/ticket-N` 브랜치에서 진행한다.
 
 ```bash
-git checkout develop
-git pull origin develop
-git checkout -b feature/project-crud
+git checkout dev
+git pull origin dev
+git checkout -b feature/ticket-N
 ```
 
-기능 완료 후 `develop`으로 Pull Request를 생성한다.
+기능 완료 후 `pre-dev`로 Pull Request를 생성한다.
 
-배포 가능한 상태가 되면 `develop`에서 `main`으로 병합한다.
+`feature/ticket-N` → `pre-dev` PR은 Gemini가 문서와 티켓 기준으로 명세 검증을 수행한다.
+
+Gemini 검증과 CI를 통과하면 `pre-dev`로 병합한다.
+
+`pre-dev` 병합 후 `pre-dev` → `dev` Pull Request를 생성한다.
+
+`pre-dev` → `dev` PR은 Claude Code GitHub Action이 코드 품질, 구조, 보안, 테스트 관점에서 리뷰한다.
+
+Claude 리뷰와 CI를 통과하면 `dev`로 병합한다.
+
+`main` 반영은 별도 배포 판단에 따라 사람이 수행한다.
 
 ---
 

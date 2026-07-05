@@ -95,7 +95,7 @@ Gemini is the specification compliance reviewer.
 
 Gemini should:
 
-- Review PRs from `feature/*` branches into `pre-dev`.
+- Review PRs from `feature/ticket-*` branches into `pre-dev`.
 - Check whether the PR matches the target ticket and project documentation.
 - Focus on requirements, API contract, ERD consistency, ownership rules, validation rules, and required tests.
 - Avoid subjective code-style review.
