@@ -1,0 +1,277 @@
+name: Gemini Spec Review
+
+on:
+  pull_request:
+    branches:
+      - pre-dev
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - edited
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  checks: read
+
+concurrency:
+  group: gemini-spec-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  gemini-spec-review:
+    name: gemini-spec-review
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GEMINI_MODEL: gemini-2.5-flash
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      REPO: ${{ github.repository }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Classify PR scope
+        id: scope
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          files="$(gh pr view "$PR_NUMBER" --json files --jq '.files[].path')"
+
+          if [ -z "$files" ]; then
+            echo "docs_only=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          docs_only=true
+          while IFS= read -r file; do
+            case "$file" in
+              docs/*|*.md|.github/ai/*)
+                ;;
+              *)
+                docs_only=false
+                ;;
+            esac
+          done <<< "$files"
+
+          echo "docs_only=$docs_only" >> "$GITHUB_OUTPUT"
+
+      - name: Extract ticket ID
+        id: ticket
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          body="$(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")"
+          ticket_id="$(printf '%s\n' "$body" | sed -nE 's/^- Ticket ID:[[:space:]]*([^[:space:]].*)$/\1/p' | head -n 1)"
+          ticket_id="${ticket_id%%$'\r'}"
+
+          if [ -z "$ticket_id" ] || [ "$ticket_id" = "-" ]; then
+            gh pr edit "$PR_NUMBER" --add-label "needs-human-review"
+            gh pr comment "$PR_NUMBER" --body "Gemini spec review did not run because the PR body has no valid \`Ticket ID\`. This ad-hoc PR needs human review."
+            exit 1
+          fi
+
+          echo "ticket_id=$ticket_id" >> "$GITHUB_OUTPUT"
+
+      - name: Fast-pass docs-only PR
+        if: steps.scope.outputs.docs_only == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cat > gemini-review.md <<EOF
+          ## Gemini Spec Review Result
+
+          ### Decision
+          [APPROVE]
+
+          ### Reason
+          Docs-only PR detected. Gemini API call skipped by policy.
+
+          ### Ticket
+          ${{ steps.ticket.outputs.ticket_id }}
+          EOF
+
+      - name: Build Gemini review prompt
+        if: steps.scope.outputs.docs_only != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gh pr diff "$PR_NUMBER" > pr.diff
+
+          {
+            echo "# Review Task"
+            echo
+            echo "Ticket ID: ${{ steps.ticket.outputs.ticket_id }}"
+            echo "Repository: $REPO"
+            echo "Pull Request: #$PR_NUMBER"
+            echo
+            echo "Review this PR according to the prompt and output format below."
+            echo "Return either [APPROVE] or [REJECT]."
+            echo
+            echo "# Gemini Prompt"
+            cat .github/ai/gemini-spec-review.md
+            echo
+            echo "# Shared Review Format"
+            cat .github/ai/review-format.md
+            echo
+            echo "# AI Rules"
+            cat docs/AI_RULES.md
+            echo
+            echo "# Documentation Index"
+            cat docs/README.md
+            echo
+            echo "# Ticket Backlog"
+            cat docs/tickets.md
+            echo
+            echo "# Requirements"
+            cat docs/02_SRS.md
+            echo
+            echo "# ERD"
+            cat docs/04_ERD.md
+            echo
+            echo "# Backend Design"
+            cat docs/05_Backend_Design.md
+            echo
+            echo "# API"
+            cat docs/07_API.md
+            echo
+            echo "# PR Diff"
+            cat pr.diff
+          } > gemini-prompt.md
+
+      - name: Run Gemini spec review
+        if: steps.scope.outputs.docs_only != 'true'
+        id: gemini
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -z "${GEMINI_API_KEY:-}" ]; then
+            echo "Gemini API key is missing." > gemini-error.txt
+            exit 2
+          fi
+
+          jq -n \
+            --rawfile prompt gemini-prompt.md \
+            '{
+              contents: [
+                {
+                  role: "user",
+                  parts: [
+                    { text: $prompt }
+                  ]
+                }
+              ],
+              generationConfig: {
+                temperature: 0
+              }
+            }' > gemini-request.json
+
+          curl --fail-with-body --silent --show-error \
+            -X POST "https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent" \
+            -H "x-goog-api-key: ${GEMINI_API_KEY}" \
+            -H "Content-Type: application/json" \
+            --data-binary @gemini-request.json > gemini-response.json
+
+          jq -r '[.candidates[0].content.parts[]?.text] | join("\n")' gemini-response.json > gemini-review.md
+
+          if [ ! -s gemini-review.md ]; then
+            echo "Gemini returned an empty response." > gemini-error.txt
+            exit 2
+          fi
+
+      - name: Handle Gemini unavailable
+        if: failure() && steps.scope.outputs.docs_only != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gh pr edit "$PR_NUMBER" --add-label "needs-human-review"
+
+          {
+            echo "Gemini spec review could not complete because the Gemini API/action was unavailable."
+            echo
+            echo "This is not treated as [REJECT]. Human review is required."
+            echo
+            if [ -f gemini-error.txt ]; then
+              echo "Error summary:"
+              cat gemini-error.txt
+            fi
+          } > gemini-unavailable-comment.md
+
+          gh pr comment "$PR_NUMBER" --body-file gemini-unavailable-comment.md
+
+      - name: Publish Gemini review
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gh pr comment "$PR_NUMBER" --body-file gemini-review.md
+
+      - name: Apply Gemini decision
+        if: success()
+        id: decision
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if grep -q '\[APPROVE\]' gemini-review.md; then
+            echo "decision=approve" >> "$GITHUB_OUTPUT"
+            gh pr edit "$PR_NUMBER" --remove-label "needs-human-review" || true
+          elif grep -q '\[REJECT\]' gemini-review.md; then
+            echo "decision=reject" >> "$GITHUB_OUTPUT"
+            exit 1
+          else
+            gh pr edit "$PR_NUMBER" --add-label "needs-human-review"
+            echo "Gemini review did not contain [APPROVE] or [REJECT]. Human review is required." > gemini-invalid-comment.md
+            gh pr comment "$PR_NUMBER" --body-file gemini-invalid-comment.md
+            exit 1
+          fi
+
+      - name: Wait for ci check
+        if: steps.decision.outputs.decision == 'approve'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for _ in {1..60}; do
+            status="$(gh api "repos/$REPO/commits/$HEAD_SHA/check-runs" \
+              --jq '.check_runs[] | select(.name == "ci") | "\(.status) \(.conclusion // "")"' \
+              | head -n 1 || true)"
+
+            if [ "$status" = "completed success" ]; then
+              exit 0
+            fi
+
+            if [[ "$status" == completed* ]] && [ "$status" != "completed success" ]; then
+              echo "ci check finished without success: $status"
+              exit 1
+            fi
+
+            sleep 10
+          done
+
+          echo "Timed out waiting for ci check on $HEAD_SHA."
+          exit 1
+
+      - name: Merge approved PR into pre-dev
+        if: steps.decision.outputs.decision == 'approve'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gh pr merge "$PR_NUMBER" --merge
