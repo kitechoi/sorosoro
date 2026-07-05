@@ -1,0 +1,245 @@
+name: Claude CTO Review
+
+on:
+  pull_request:
+    branches:
+      - dev
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - labeled
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  checks: read
+
+concurrency:
+  group: claude-cto-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  claude-cto-review:
+    name: claude-cto-review
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false && (github.event.action != 'labeled' || github.event.label.name == 'claude-review')
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      EVENT_NAME: ${{ github.event_name }}
+      EVENT_ACTION: ${{ github.event.action }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Classify PR scope
+        id: scope
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          files="$(gh pr view "$PR_NUMBER" --json files --jq '.files[].path')"
+
+          docs_only=true
+          while IFS= read -r file; do
+            case "$file" in
+              docs/*|*.md|.github/ai/*)
+                ;;
+              *)
+                docs_only=false
+                ;;
+            esac
+          done <<< "$files"
+
+          echo "docs_only=$docs_only" >> "$GITHUB_OUTPUT"
+
+      - name: Fast-pass docs-only PR
+        if: steps.scope.outputs.docs_only == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gh pr edit "$PR_NUMBER" --add-label "docs-only-review-passed"
+          gh pr edit "$PR_NUMBER" --remove-label "merge-ready" || true
+
+          cat > claude-docs-only-comment.md <<'EOF'
+          Claude CTO review check passed immediately because this PR changes docs-only files.
+
+          No `merge-ready` label was added solely because of docs-only status.
+          EOF
+
+          gh pr comment "$PR_NUMBER" --body-file claude-docs-only-comment.md
+
+      - name: Determine Claude review round
+        if: steps.scope.outputs.docs_only != 'true'
+        id: round
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          labels="$(gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name')"
+          latest_message="$(git log -1 --pretty=%B "$HEAD_SHA")"
+
+          has_round_1=false
+          has_round_2=false
+          has_manual_trigger=false
+
+          if printf '%s\n' "$labels" | grep -qx 'claude-round-1'; then
+            has_round_1=true
+          fi
+          if printf '%s\n' "$labels" | grep -qx 'claude-round-2'; then
+            has_round_2=true
+          fi
+          if printf '%s\n' "$labels" | grep -qx 'claude-review'; then
+            has_manual_trigger=true
+          fi
+
+          if [ "$has_round_2" = true ]; then
+            gh pr edit "$PR_NUMBER" --add-label "needs-human-review"
+            echo "Claude round 2 has already completed. Automatic reruns are stopped; human review is required." > claude-stop-comment.md
+            gh pr comment "$PR_NUMBER" --body-file claude-stop-comment.md
+            exit 1
+          fi
+
+          if [ "$has_round_1" = true ]; then
+            if printf '%s\n' "$latest_message" | grep -q '\[claude-followup\]' || [ "$has_manual_trigger" = true ]; then
+              echo "review_round=2" >> "$GITHUB_OUTPUT"
+            else
+              gh pr edit "$PR_NUMBER" --remove-label "merge-ready" || true
+              gh pr edit "$PR_NUMBER" --add-label "needs-re-review"
+              echo "Code changed after Claude round 1 without a [claude-followup] commit or claude-review label. Claude was not rerun automatically." > claude-needs-rereview-comment.md
+              gh pr comment "$PR_NUMBER" --body-file claude-needs-rereview-comment.md
+              exit 1
+            fi
+          else
+            echo "review_round=1" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build Claude prompt
+        if: steps.scope.outputs.docs_only != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gh pr diff "$PR_NUMBER" > pr.diff
+          pr_body="$(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")"
+
+          {
+            echo "# Claude CTO Review Task"
+            echo
+            echo "You are reviewing PR #$PR_NUMBER for SOROSORO."
+            echo "Review round: ${{ steps.round.outputs.review_round }}"
+            echo
+            echo "Strict instructions:"
+            echo "- Review only. Do not modify source files, commit, push, or open additional PRs."
+            echo "- Write the final review comment to a file named claude-review.md."
+            echo "- The review must include either [MERGE_READY] or [CHANGES_REQUESTED]."
+            echo "- For round 2, check only whether previous blocking issues are resolved."
+            echo
+            echo "# Project Claude Review Prompt"
+            cat .github/ai/claude-cto-review.md
+            echo
+            echo "# Shared Review Format"
+            cat .github/ai/review-format.md
+            echo
+            echo "# AI Rules"
+            cat docs/AI_RULES.md
+            echo
+            echo "# PR Body"
+            printf '%s\n' "$pr_body"
+            echo
+            echo "# PR Diff"
+            cat pr.diff
+          } > claude-prompt.md
+
+      - name: Run Claude CTO review
+        if: steps.scope.outputs.docs_only != 'true'
+        id: claude
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          prompt: |
+            Read the file `claude-prompt.md` and perform the requested CTO code review.
+            Write the final GitHub PR review comment to `claude-review.md`.
+          claude_args: |
+            --model sonnet
+            --max-turns 5
+            --append-system-prompt "You are review-only in this workflow. Do not edit repository files except writing claude-review.md. Do not commit. Do not push. Do not run destructive commands."
+
+      - name: Handle Claude unavailable
+        if: steps.scope.outputs.docs_only != 'true' && steps.claude.outcome != 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gh pr edit "$PR_NUMBER" --add-label "claude-unavailable"
+          gh pr edit "$PR_NUMBER" --add-label "needs-human-review"
+
+          cat > claude-unavailable-comment.md <<'EOF'
+          Claude CTO review could not complete because the Claude Action failed or was unavailable.
+
+          This PR is not sent into the Codex fix flow. Human review is required.
+          EOF
+
+          gh pr comment "$PR_NUMBER" --body-file claude-unavailable-comment.md
+          exit 1
+
+      - name: Publish Claude review
+        if: steps.scope.outputs.docs_only != 'true' && steps.claude.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ ! -s claude-review.md ]; then
+            echo "Claude Action completed but did not create claude-review.md." > claude-review.md
+            echo >> claude-review.md
+            echo "[CHANGES_REQUESTED]" >> claude-review.md
+          fi
+
+          gh pr comment "$PR_NUMBER" --body-file claude-review.md
+
+      - name: Apply Claude decision
+        if: steps.scope.outputs.docs_only != 'true' && steps.claude.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          round="${{ steps.round.outputs.review_round }}"
+
+          if grep -q '\[MERGE_READY\]' claude-review.md; then
+            gh pr edit "$PR_NUMBER" --add-label "merge-ready"
+            gh pr edit "$PR_NUMBER" --remove-label "needs-re-review" || true
+            gh pr edit "$PR_NUMBER" --remove-label "needs-codex-fix" || true
+            gh pr edit "$PR_NUMBER" --remove-label "claude-review" || true
+            gh pr edit "$PR_NUMBER" --add-label "claude-round-$round"
+            exit 0
+          fi
+
+          if grep -q '\[CHANGES_REQUESTED\]' claude-review.md; then
+            gh pr edit "$PR_NUMBER" --remove-label "merge-ready" || true
+            gh pr edit "$PR_NUMBER" --remove-label "claude-review" || true
+            gh pr edit "$PR_NUMBER" --add-label "claude-round-$round"
+
+            if [ "$round" = "1" ]; then
+              gh pr edit "$PR_NUMBER" --add-label "needs-codex-fix"
+            else
+              gh pr edit "$PR_NUMBER" --remove-label "needs-codex-fix" || true
+              gh pr edit "$PR_NUMBER" --add-label "needs-human-review"
+            fi
+
+            exit 1
+          fi
+
+          gh pr edit "$PR_NUMBER" --add-label "needs-human-review"
+          echo "Claude review did not contain [MERGE_READY] or [CHANGES_REQUESTED]. Human review is required." > claude-invalid-comment.md
+          gh pr comment "$PR_NUMBER" --body-file claude-invalid-comment.md
+          exit 1
