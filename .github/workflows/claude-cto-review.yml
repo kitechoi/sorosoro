@@ -139,7 +139,6 @@ jobs:
             echo
             echo "Strict instructions:"
             echo "- Review only. Do not modify source files, commit, push, or open additional PRs."
-            echo "- Write the final review comment to a file named claude-review.md."
             echo "- The review must include either [MERGE_READY] or [CHANGES_REQUESTED]."
             echo "- For round 2, check only whether previous blocking issues are resolved."
             echo
@@ -148,6 +147,9 @@ jobs:
             echo
             echo "# Shared Review Format"
             cat .github/ai/review-format.md
+            echo
+            echo "# Project README"
+            cat docs/README.md
             echo
             echo "# AI Rules"
             cat docs/AI_RULES.md
@@ -159,22 +161,30 @@ jobs:
             cat pr.diff
           } > claude-prompt.md
 
+      - name: Install Claude Code CLI
+        if: steps.scope.outputs.docs_only != 'true'
+        shell: bash
+        run: npm install -g @anthropic-ai/claude-code
+
       - name: Run Claude CTO review
         if: steps.scope.outputs.docs_only != 'true'
         id: claude
         continue-on-error: true
-        uses: anthropics/claude-code-action@v1
-        with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          github_token: ${{ github.token }}
-          allowed_bots: 'github-actions'
-          prompt: |
-            Read the file `claude-prompt.md` and perform the requested CTO code review.
-            Write the final GitHub PR review comment to `claude-review.md`.
-          claude_args: |
-            --model sonnet
-            --max-turns 5
-            --append-system-prompt "You are review-only in this workflow. Do not edit repository files except writing claude-review.md. Do not commit. Do not push. Do not run destructive commands."
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cat claude-prompt.md | claude -p \
+            --model sonnet \
+            --max-turns 2 \
+            --permission-mode bypassPermissions \
+            --disallowedTools "Bash,Edit,Write,FileMultiEdit,NotebookEdit,WebFetch,WebSearch,TodoWrite,Read,Glob,Grep,Task" \
+            --append-system-prompt "You are review-only. No tools are available to you in this session. Base your review entirely on the content provided in the prompt. Respond with the final review text only." \
+            --output-format json > claude-output.json
+
+          cat claude-output.json
 
       - name: Handle Claude unavailable
         if: steps.scope.outputs.docs_only != 'true' && steps.claude.outcome != 'success'
@@ -193,6 +203,23 @@ jobs:
 
           gh pr comment "$PR_NUMBER" --body-file claude-unavailable-comment.md
           exit 1
+
+      - name: Extract Claude review result
+        if: steps.scope.outputs.docs_only != 'true' && steps.claude.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          jq -r '.result // empty' claude-output.json > claude-review.md
+
+          if [ ! -s claude-review.md ]; then
+            echo "Claude call completed but returned no usable result." > claude-review.md
+            echo >> claude-review.md
+            echo "[CHANGES_REQUESTED]" >> claude-review.md
+          fi
+
+          echo "--- claude run metadata ---"
+          jq '{num_turns, total_cost_usd, duration_ms, permission_denials_count}' claude-output.json || true
 
       - name: Publish Claude review
         if: steps.scope.outputs.docs_only != 'true' && steps.claude.outcome == 'success'
