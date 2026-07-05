@@ -1,0 +1,92 @@
+name: Claude CLI Cost Compare (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to replay (the same PR that previously failed with claude-code-action)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR_NUMBER: ${{ inputs.pr_number }}
+
+    steps:
+      - name: Checkout PR merge ref
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ inputs.pr_number }}/merge
+          fetch-depth: 0
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Build prompt (identical to production Build Claude prompt step)
+        run: |
+          set -euo pipefail
+          gh pr diff "$PR_NUMBER" > pr.diff
+          pr_body="$(gh pr view "$PR_NUMBER" --json body --jq '.body // ""')"
+
+          {
+            echo "# Claude CTO Review Task"
+            echo
+            echo "You are reviewing PR #$PR_NUMBER for SOROSORO."
+            echo "Review round: 1"
+            echo
+            echo "Strict instructions:"
+            echo "- Review only. Do not modify source files, commit, push, or open additional PRs."
+            echo "- The review must include either [MERGE_READY] or [CHANGES_REQUESTED]."
+            echo
+            echo "# Project Claude Review Prompt"
+            cat .github/ai/claude-cto-review.md
+            echo
+            echo "# Shared Review Format"
+            cat .github/ai/review-format.md
+            echo
+            echo "# AI Rules"
+            cat docs/AI_RULES.md
+            echo
+            echo "# PR Body"
+            printf '%s\n' "$pr_body"
+            echo
+            echo "# PR Diff"
+            cat pr.diff
+          } > claude-prompt.md
+
+      - name: Run Claude CLI review (single-turn, no tools)
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          set -euo pipefail
+          cat claude-prompt.md | claude -p \
+            --model sonnet \
+            --max-turns 2 \
+            --permission-mode bypassPermissions \
+            --disallowedTools "Bash,Edit,Write,MultiEdit,NotebookEdit,WebFetch,WebSearch,TodoWrite,Read,Glob,Grep,LS,Task" \
+            --append-system-prompt "You are review-only. No tools are available to you in this session. Base your review entirely on the content provided in the prompt. Respond with the final review text only." \
+            --output-format json > claude-output.json
+
+      - name: Show cost / turns comparison
+        run: |
+          set -euo pipefail
+          echo "===== METADATA (compare against previous claude-code-action run) ====="
+          jq '{num_turns, total_cost_usd, duration_ms, permission_denials_count}' claude-output.json
+          echo
+          echo "===== RESULT ====="
+          jq -r '.result // "NO RESULT FIELD FOUND"' claude-output.json
+
+      - name: Upload raw Claude CLI output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-cli-output
+          path: claude-output.json
+          if-no-files-found: ignore
