@@ -30,13 +30,16 @@ When an AI agent or contributor needs to understand the project, read the docume
 4. `04_ERD.md`
 5. `05_Backend_Design.md`
 6. `06_Architecture.md`
-7. `07.API.md`
+7. `07_API.md`
 8. `08_Implementation.md`
-9. `09_Test Strategy.md`
+9. `09_Test_Strategy.md`
 10. `tickets.md`
+11. `12_AI_Review_Flow.md`
 
-`10_Portfolio README.md` and `11_Wireframe.md` are supporting documents.
+`10_Portfolio_README.md` and `11_Wireframe.md` are supporting documents.
 They should be referenced only when needed.
+
+Document filenames must use the `NN_Name.md` format. Spaces and dots are not allowed in document filenames.
 
 ## Source of Truth
 
@@ -50,17 +53,18 @@ Use the following document as the primary source for each type of decision.
 | Database model, entities, relationships, constraints | `04_ERD.md` |
 | Backend layering, validation, service responsibility | `05_Backend_Design.md` |
 | System architecture and dependency direction | `06_Architecture.md` |
-| API paths, methods, requests, responses, status codes | `07.API.md` |
+| API paths, methods, requests, responses, status codes | `07_API.md` |
 | Implementation sequence and technical notes | `08_Implementation.md` |
-| Testing scope and expectations | `09_Test Strategy.md` |
+| Testing scope and expectations | `09_Test_Strategy.md` |
 | Ticket scope and implementation checklist | `tickets.md` |
+| AI review workflow, labels, gates, and reviewer roles | `12_AI_Review_Flow.md` |
 
 ## Conflict Resolution Priority
 
 When documents conflict, follow this priority:
 
 1. `tickets.md`
-2. `07.API.md`
+2. `07_API.md`
 3. `02_SRS.md`
 4. `04_ERD.md`
 5. `05_Backend_Design.md`
@@ -68,7 +72,8 @@ When documents conflict, follow this priority:
 7. `03_ADR.md`
 8. `01_PRD.md`
 9. `08_Implementation.md`
-10. `09_Test Strategy.md`
+10. `09_Test_Strategy.md`
+11. `12_AI_Review_Flow.md`
 
 If the conflict cannot be resolved from the documents, do not guess.
 Leave a clear question for the human maintainer.
@@ -114,6 +119,8 @@ Claude should:
 - Request changes only when there is a concrete correctness, security, maintainability, testing, or operational risk.
 
 ## Branch and PR Flow
+
+`12_AI_Review_Flow.md` is the source of truth for the AI review workflow, labels, round limits, docs-only policy, and merge gates.
 
 ```text
 feature/ticket-N

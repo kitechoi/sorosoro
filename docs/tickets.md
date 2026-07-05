@@ -6,28 +6,31 @@
 
 ## [BE-001] User 내 정보 조회 및 회원 탈퇴 API 구현
 
-* **추천 브랜치명:** feature/user-api
+* **추천 브랜치명:** feature/ticket-be-001
+* **상태:** DONE
 * **관련 명세서:** docs/02_SRS.md, docs/05_Backend_Design.md, docs/07_API.md
+* **비고:** AI 리뷰 파이프라인 도입 전 구현·merge됨. 구현 커밋: `241ebed`
 * **체크리스트:**
 
-  * [ ] `GET /api/v1/users/me` API 구현
-  * [ ] `DELETE /api/v1/users/me` API 구현
-  * [ ] `UserController` 구현
-  * [ ] `UserService` 구현
-  * [ ] `UserMeResponse` DTO 구현
-  * [ ] `@AuthenticationPrincipal AuthUserPrincipal` 기반 현재 사용자 조회 구현
-  * [ ] 회원 탈퇴 시 `User.status = DELETED` 처리
-  * [ ] 회원 탈퇴 시 해당 User의 RefreshToken 전체 삭제
-  * [ ] 탈퇴 처리용 `User.withdraw()` 또는 `User.delete()` 메서드 추가
-  * [ ] UserService 테스트 작성
-  * [ ] 인증 없는 요청 401 테스트 작성
-  * [ ] 탈퇴 후 User 상태 변경 테스트 작성
+  * [x] `GET /api/v1/users/me` API 구현
+  * [x] `DELETE /api/v1/users/me` API 구현
+  * [x] `UserController` 구현
+  * [x] `UserService` 구현
+  * [x] `UserMeResponse` DTO 구현
+  * [x] `@AuthenticationPrincipal AuthUserPrincipal` 기반 현재 사용자 조회 구현
+  * [x] 회원 탈퇴 시 `User.status = DELETED` 처리
+  * [x] 회원 탈퇴 시 해당 User의 RefreshToken 전체 삭제
+  * [x] 탈퇴 처리용 `User.withdraw()` 또는 `User.delete()` 메서드 추가
+  * [x] UserService 테스트 작성
+  * [x] 인증 없는 요청 401 테스트 작성
+  * [x] 탈퇴 후 User 상태 변경 테스트 작성
 
 ---
 
 ## [BE-002] Project 생성 API 구현
 
-* **추천 브랜치명:** feature/project-create
+* **추천 브랜치명:** feature/ticket-be-002
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/04_ERD.md, docs/05_Backend_Design.md, docs/07_API.md
 * **체크리스트:**
 
@@ -48,7 +51,8 @@
 
 ## [BE-003] Project 목록 조회 API 구현
 
-* **추천 브랜치명:** feature/project-list
+* **추천 브랜치명:** feature/ticket-be-003
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/05_Backend_Design.md, docs/07_API.md, docs/09_Test_Strategy.md
 * **체크리스트:**
 
@@ -68,7 +72,8 @@
 
 ## [BE-004] Project 상세 조회 API 구현
 
-* **추천 브랜치명:** feature/project-detail
+* **추천 브랜치명:** feature/ticket-be-004
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/04_ERD.md, docs/05_Backend_Design.md, docs/07_API.md
 * **체크리스트:**
 
@@ -88,7 +93,8 @@
 
 ## [BE-005] Project 수정 API 구현
 
-* **추천 브랜치명:** feature/project-update
+* **추천 브랜치명:** feature/ticket-be-005
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/05_Backend_Design.md, docs/07_API.md, docs/09_Test_Strategy.md
 * **체크리스트:**
 
@@ -108,7 +114,8 @@
 
 ## [BE-006] Project 상태 변경 API 구현
 
-* **추천 브랜치명:** feature/project-status
+* **추천 브랜치명:** feature/ticket-be-006
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/05_Backend_Design.md, docs/07_API.md
 * **체크리스트:**
 
@@ -126,7 +133,8 @@
 
 ## [BE-007] Project 삭제 API 구현
 
-* **추천 브랜치명:** feature/project-delete
+* **추천 브랜치명:** feature/ticket-be-007
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/04_ERD.md, docs/05_Backend_Design.md, docs/07_API.md
 * **체크리스트:**
 
@@ -148,7 +156,8 @@
 
 ## [BE-008] ProjectSpecification 조회 및 수정 API 구현
 
-* **추천 브랜치명:** feature/project-specification
+* **추천 브랜치명:** feature/ticket-be-008
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/04_ERD.md, docs/05_Backend_Design.md, docs/07_API.md
 * **체크리스트:**
 
@@ -167,7 +176,8 @@
 
 ## [BE-009] ProjectReference 등록, 수정, 삭제 API 구현
 
-* **추천 브랜치명:** feature/project-reference
+* **추천 브랜치명:** feature/ticket-be-009
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/04_ERD.md, docs/05_Backend_Design.md, docs/07_API.md
 * **체크리스트:**
 
@@ -190,7 +200,8 @@
 
 ## [BE-010] Fabric 등록 API 구현
 
-* **추천 브랜치명:** feature/fabric-create
+* **추천 브랜치명:** feature/ticket-be-010
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/04_ERD.md, docs/05_Backend_Design.md, docs/07_API.md
 * **체크리스트:**
 
@@ -212,7 +223,8 @@
 
 ## [BE-011] Fabric 목록 조회 API 구현
 
-* **추천 브랜치명:** feature/fabric-list
+* **추천 브랜치명:** feature/ticket-be-011
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/05_Backend_Design.md, docs/07_API.md, docs/09_Test_Strategy.md
 * **체크리스트:**
 
@@ -234,7 +246,8 @@
 
 ## [BE-012] Fabric 상세 조회 API 구현
 
-* **추천 브랜치명:** feature/fabric-detail
+* **추천 브랜치명:** feature/ticket-be-012
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/04_ERD.md, docs/05_Backend_Design.md, docs/07_API.md
 * **체크리스트:**
 
@@ -252,7 +265,8 @@
 
 ## [BE-013] Fabric 수정 API 구현
 
-* **추천 브랜치명:** feature/fabric-update
+* **추천 브랜치명:** feature/ticket-be-013
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/05_Backend_Design.md, docs/07_API.md
 * **체크리스트:**
 
@@ -271,7 +285,8 @@
 
 ## [BE-014] Fabric 삭제 API 구현
 
-* **추천 브랜치명:** feature/fabric-delete
+* **추천 브랜치명:** feature/ticket-be-014
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/04_ERD.md, docs/05_Backend_Design.md, docs/07_API.md
 * **체크리스트:**
 
@@ -290,7 +305,8 @@
 
 ## [BE-015] Project-Fabric 연결 API 구현
 
-* **추천 브랜치명:** feature/project-fabric-connect
+* **추천 브랜치명:** feature/ticket-be-015
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/03_ADR.md, docs/04_ERD.md, docs/05_Backend_Design.md, docs/07_API.md
 * **체크리스트:**
 
@@ -312,7 +328,8 @@
 
 ## [BE-016] Project-Fabric 연결 메모 수정 및 삭제 API 구현
 
-* **추천 브랜치명:** feature/project-fabric-manage
+* **추천 브랜치명:** feature/ticket-be-016
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/04_ERD.md, docs/05_Backend_Design.md, docs/07_API.md
 * **체크리스트:**
 
@@ -333,7 +350,8 @@
 
 ## [BE-017] DailyLog 생성 API 구현
 
-* **추천 브랜치명:** feature/dailylog-create
+* **추천 브랜치명:** feature/ticket-be-017
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/03_ADR.md, docs/04_ERD.md, docs/05_Backend_Design.md, docs/07_API.md
 * **체크리스트:**
 
@@ -359,7 +377,8 @@
 
 ## [BE-018] DailyLog 목록 조회 API 구현
 
-* **추천 브랜치명:** feature/dailylog-list
+* **추천 브랜치명:** feature/ticket-be-018
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/05_Backend_Design.md, docs/07_API.md
 * **체크리스트:**
 
@@ -383,7 +402,8 @@
 
 ## [BE-019] DailyLog 상세 조회 API 구현
 
-* **추천 브랜치명:** feature/dailylog-detail
+* **추천 브랜치명:** feature/ticket-be-019
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/04_ERD.md, docs/05_Backend_Design.md, docs/07_API.md
 * **체크리스트:**
 
@@ -403,7 +423,8 @@
 
 ## [BE-020] DailyLog 수정 API 구현
 
-* **추천 브랜치명:** feature/dailylog-update
+* **추천 브랜치명:** feature/ticket-be-020
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/03_ADR.md, docs/05_Backend_Design.md, docs/07_API.md, docs/09_Test_Strategy.md
 * **체크리스트:**
 
@@ -427,7 +448,8 @@
 
 ## [BE-021] DailyLog 발행 API 구현
 
-* **추천 브랜치명:** feature/dailylog-publish
+* **추천 브랜치명:** feature/ticket-be-021
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/03_ADR.md, docs/05_Backend_Design.md, docs/07_API.md, docs/09_Test_Strategy.md
 * **체크리스트:**
 
@@ -450,7 +472,8 @@
 
 ## [BE-022] DailyLog 삭제 API 구현
 
-* **추천 브랜치명:** feature/dailylog-delete
+* **추천 브랜치명:** feature/ticket-be-022
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/04_ERD.md, docs/05_Backend_Design.md, docs/07_API.md
 * **체크리스트:**
 
@@ -469,7 +492,8 @@
 
 ## [BE-023] Calendar 월별 조회 API 구현
 
-* **추천 브랜치명:** feature/calendar-monthly
+* **추천 브랜치명:** feature/ticket-be-023
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/03_ADR.md, docs/05_Backend_Design.md, docs/07_API.md, docs/09_Test_Strategy.md
 * **체크리스트:**
 
@@ -493,7 +517,8 @@
 
 ## [BE-024] 날짜별 작업 요약 API 구현
 
-* **추천 브랜치명:** feature/calendar-day-summary
+* **추천 브랜치명:** feature/ticket-be-024
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/05_Backend_Design.md, docs/07_API.md, docs/09_Test_Strategy.md
 * **체크리스트:**
 
@@ -512,7 +537,8 @@
 
 ## [BE-025] Contribution 조회 API 구현
 
-* **추천 브랜치명:** feature/contribution
+* **추천 브랜치명:** feature/ticket-be-025
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/03_ADR.md, docs/05_Backend_Design.md, docs/07_API.md, docs/09_Test_Strategy.md
 * **체크리스트:**
 
@@ -534,7 +560,8 @@
 
 ## [BE-026] Photo Presigned URL 발급 API 구현
 
-* **추천 브랜치명:** feature/photo-presigned-url
+* **추천 브랜치명:** feature/ticket-be-026
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/03_ADR.md, docs/04_ERD.md, docs/05_Backend_Design.md, docs/06_Architecture.md, docs/07_API.md
 * **체크리스트:**
 
@@ -562,7 +589,8 @@
 
 ## [BE-027] Photo 업로드 완료 처리 API 구현
 
-* **추천 브랜치명:** feature/photo-complete-upload
+* **추천 브랜치명:** feature/ticket-be-027
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/03_ADR.md, docs/05_Backend_Design.md, docs/06_Architecture.md, docs/07_API.md, docs/09_Test_Strategy.md
 * **체크리스트:**
 
@@ -583,7 +611,8 @@
 
 ## [BE-028] Photo 목록 조회 API 구현
 
-* **추천 브랜치명:** feature/photo-list
+* **추천 브랜치명:** feature/ticket-be-028
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/04_ERD.md, docs/05_Backend_Design.md, docs/07_API.md
 * **체크리스트:**
 
@@ -604,7 +633,8 @@
 
 ## [BE-029] Photo 대표 사진 설정 API 구현
 
-* **추천 브랜치명:** feature/photo-thumbnail
+* **추천 브랜치명:** feature/ticket-be-029
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/03_ADR.md, docs/05_Backend_Design.md, docs/07_API.md, docs/09_Test_Strategy.md
 * **체크리스트:**
 
@@ -625,7 +655,8 @@
 
 ## [BE-030] Photo 정렬 순서 수정 및 삭제 API 구현
 
-* **추천 브랜치명:** feature/photo-manage
+* **추천 브랜치명:** feature/ticket-be-030
+* **상태:** TODO
 * **관련 명세서:** docs/02_SRS.md, docs/05_Backend_Design.md, docs/06_Architecture.md, docs/07_API.md
 * **체크리스트:**
 
@@ -647,7 +678,8 @@
 
 ## [BE-031] Image Processing Worker 구현
 
-* **추천 브랜치명:** feature/photo-worker
+* **추천 브랜치명:** feature/ticket-be-031
+* **상태:** TODO
 * **관련 명세서:** docs/03_ADR.md, docs/05_Backend_Design.md, docs/06_Architecture.md, docs/09_Test_Strategy.md
 * **체크리스트:**
 
@@ -675,8 +707,9 @@
 
 ## [BE-032] Redis Queue 기반 비동기 처리 연결
 
-* **추천 브랜치명:** feature/redis-queue
-* **관련 명세서:** docs/06_Architecture.md, docs/08_Implementation_Plan.md, docs/09_Test_Strategy.md
+* **추천 브랜치명:** feature/ticket-be-032
+* **상태:** TODO
+* **관련 명세서:** docs/06_Architecture.md, docs/08_Implementation.md, docs/09_Test_Strategy.md
 * **체크리스트:**
 
   * [ ] docker-compose.yml에 Redis queue 서비스 추가
@@ -694,7 +727,8 @@
 
 ## [BE-033] S3 연동 구현
 
-* **추천 브랜치명:** feature/s3-storage
+* **추천 브랜치명:** feature/ticket-be-033
+* **상태:** TODO
 * **관련 명세서:** docs/03_ADR.md, docs/05_Backend_Design.md, docs/06_Architecture.md, docs/07_API.md
 * **체크리스트:**
 
@@ -715,7 +749,8 @@
 
 ## [BE-034] Security 통합 테스트 보강
 
-* **추천 브랜치명:** test/security-integration
+* **추천 브랜치명:** feature/ticket-be-034
+* **상태:** TODO
 * **관련 명세서:** docs/05_Backend_Design.md, docs/07_API.md, docs/09_Test_Strategy.md
 * **체크리스트:**
 
@@ -732,7 +767,8 @@
 
 ## [BE-035] API 통합 테스트 작성
 
-* **추천 브랜치명:** test/api-integration
+* **추천 브랜치명:** feature/ticket-be-035
+* **상태:** TODO
 * **관련 명세서:** docs/07_API.md, docs/09_Test_Strategy.md
 * **체크리스트:**
 
@@ -753,8 +789,9 @@
 
 ## [BE-036] Docker Compose app + worker + postgres + redis 구조 정리
 
-* **추천 브랜치명:** infra/docker-compose-worker
-* **관련 명세서:** docs/06_Architecture.md, docs/08_Implementation_Plan.md
+* **추천 브랜치명:** feature/ticket-be-036
+* **상태:** TODO
+* **관련 명세서:** docs/06_Architecture.md, docs/08_Implementation.md
 * **체크리스트:**
 
   * [ ] docker-compose.yml에 worker 서비스 추가
@@ -774,8 +811,9 @@
 
 ## [BE-037] Nginx Reverse Proxy 설정
 
-* **추천 브랜치명:** infra/nginx
-* **관련 명세서:** docs/06_Architecture.md, docs/08_Implementation_Plan.md
+* **추천 브랜치명:** feature/ticket-be-037
+* **상태:** TODO
+* **관련 명세서:** docs/06_Architecture.md, docs/08_Implementation.md
 * **체크리스트:**
 
   * [ ] nginx 설정 파일 추가
@@ -793,8 +831,9 @@
 
 ## [BE-038] 운영 환경 설정 및 배포 문서 정리
 
-* **추천 브랜치명:** infra/deploy-docs
-* **관련 명세서:** docs/06_Architecture.md, docs/08_Implementation_Plan.md, docs/10_Portfolio_README.md
+* **추천 브랜치명:** feature/ticket-be-038
+* **상태:** TODO
+* **관련 명세서:** docs/06_Architecture.md, docs/08_Implementation.md, docs/10_Portfolio_README.md
 * **체크리스트:**
 
   * [ ] `.env.example` 최신화
@@ -812,15 +851,20 @@
 
 ## [BE-039] GitHub Actions CI 구성
 
-* **추천 브랜치명:** infra/github-actions-ci
-* **관련 명세서:** docs/06_Architecture.md, docs/08_Implementation_Plan.md, docs/09_Test_Strategy.md
+* **추천 브랜치명:** feature/ticket-be-039
+* **상태:** TODO
+* **관련 명세서:** docs/06_Architecture.md, docs/08_Implementation.md, docs/09_Test_Strategy.md, docs/12_AI_Review_Flow.md
 * **체크리스트:**
 
   * [ ] GitHub Actions workflow 파일 추가
-  * [ ] PR 생성 시 backend 테스트 실행
+  * [ ] job/check 이름을 `ci`로 고정
+  * [ ] `ci` 이름은 branch protection required status check에서 참조하므로 이후 rename 금지 주석 추가
+  * [ ] `pull_request` 트리거 대상 base branch를 `pre-dev`, `dev`로 제한
+  * [ ] `push` 트리거 대상 branch를 `pre-dev`, `dev`로 제한
   * [ ] Java 17 setup 구성
   * [ ] Gradle cache 구성
-  * [ ] `./gradlew test` 실행
+  * [ ] `backend` working-directory에서 `./gradlew test` 실행
+  * [ ] Testcontainers가 `ubuntu-latest` Docker daemon에서 동작하는지 CI 실행으로 확인
   * [ ] 테스트 실패 시 PR merge 방지 기준 문서화
   * [ ] workflow badge README에 추가
   * [ ] CI 실행 결과 확인
@@ -829,8 +873,9 @@
 
 ## [BE-040] GitHub Actions 배포 Workflow 초안 구성
 
-* **추천 브랜치명:** infra/github-actions-deploy
-* **관련 명세서:** docs/06_Architecture.md, docs/08_Implementation_Plan.md, docs/10_Portfolio_README.md
+* **추천 브랜치명:** feature/ticket-be-040
+* **상태:** TODO
+* **관련 명세서:** docs/06_Architecture.md, docs/08_Implementation.md, docs/10_Portfolio_README.md
 * **체크리스트:**
 
   * [ ] main branch push 시 배포 workflow 작성
@@ -847,8 +892,9 @@
 
 ## [FE-001] Frontend 프로젝트 초기 세팅
 
-* **추천 브랜치명:** feature/frontend-init
-* **관련 명세서:** docs/07_API.md, docs/08_Implementation_Plan.md, docs/11_Wireframe.md
+* **추천 브랜치명:** feature/ticket-fe-001
+* **상태:** TODO
+* **관련 명세서:** docs/07_API.md, docs/08_Implementation.md, docs/11_Wireframe.md
 * **체크리스트:**
 
   * [ ] frontend/에 React 또는 Next.js 프로젝트 생성
@@ -866,7 +912,8 @@
 
 ## [FE-002] 공통 UI 컴포넌트 구현
 
-* **추천 브랜치명:** feature/frontend-components
+* **추천 브랜치명:** feature/ticket-fe-002
+* **상태:** TODO
 * **관련 명세서:** docs/11_Wireframe.md, docs/10_Portfolio_README.md
 * **체크리스트:**
 
@@ -886,7 +933,8 @@
 
 ## [FE-003] Auth/Login 화면 구현
 
-* **추천 브랜치명:** feature/frontend-auth
+* **추천 브랜치명:** feature/ticket-fe-003
+* **상태:** TODO
 * **관련 명세서:** docs/07_API.md, docs/11_Wireframe.md
 * **체크리스트:**
 
@@ -903,7 +951,8 @@
 
 ## [FE-004] Home 화면 구현
 
-* **추천 브랜치명:** feature/frontend-home
+* **추천 브랜치명:** feature/ticket-fe-004
+* **상태:** TODO
 * **관련 명세서:** docs/07_API.md, docs/11_Wireframe.md
 * **체크리스트:**
 
@@ -921,7 +970,8 @@
 
 ## [FE-005] Project 화면 구현
 
-* **추천 브랜치명:** feature/frontend-project
+* **추천 브랜치명:** feature/ticket-fe-005
+* **상태:** TODO
 * **관련 명세서:** docs/07_API.md, docs/11_Wireframe.md
 * **체크리스트:**
 
@@ -942,7 +992,8 @@
 
 ## [FE-006] Fabric 화면 구현
 
-* **추천 브랜치명:** feature/frontend-fabric
+* **추천 브랜치명:** feature/ticket-fe-006
+* **상태:** TODO
 * **관련 명세서:** docs/07_API.md, docs/11_Wireframe.md
 * **체크리스트:**
 
@@ -961,7 +1012,8 @@
 
 ## [FE-007] Project-Fabric 연결 화면 구현
 
-* **추천 브랜치명:** feature/frontend-project-fabric
+* **추천 브랜치명:** feature/ticket-fe-007
+* **상태:** TODO
 * **관련 명세서:** docs/07_API.md, docs/11_Wireframe.md
 * **체크리스트:**
 
@@ -979,7 +1031,8 @@
 
 ## [FE-008] DailyLog 화면 구현
 
-* **추천 브랜치명:** feature/frontend-dailylog
+* **추천 브랜치명:** feature/ticket-fe-008
+* **상태:** TODO
 * **관련 명세서:** docs/07_API.md, docs/11_Wireframe.md
 * **체크리스트:**
 
@@ -1001,7 +1054,8 @@
 
 ## [FE-009] Photo 업로드 UI 구현
 
-* **추천 브랜치명:** feature/frontend-photo-upload
+* **추천 브랜치명:** feature/ticket-fe-009
+* **상태:** TODO
 * **관련 명세서:** docs/07_API.md, docs/11_Wireframe.md
 * **체크리스트:**
 
@@ -1022,7 +1076,8 @@
 
 ## [FE-010] Calendar 및 Contribution 화면 구현
 
-* **추천 브랜치명:** feature/frontend-calendar
+* **추천 브랜치명:** feature/ticket-fe-010
+* **상태:** TODO
 * **관련 명세서:** docs/07_API.md, docs/11_Wireframe.md
 * **체크리스트:**
 
@@ -1043,7 +1098,8 @@
 
 ## [FE-011] My Page 구현
 
-* **추천 브랜치명:** feature/frontend-my-page
+* **추천 브랜치명:** feature/ticket-fe-011
+* **상태:** TODO
 * **관련 명세서:** docs/07_API.md, docs/11_Wireframe.md
 * **체크리스트:**
 
@@ -1061,7 +1117,8 @@
 
 ## [FE-012] Frontend API 연동 및 인증 흐름 정리
 
-* **추천 브랜치명:** feature/frontend-api-client
+* **추천 브랜치명:** feature/ticket-fe-012
+* **상태:** TODO
 * **관련 명세서:** docs/07_API.md, docs/05_Backend_Design.md
 * **체크리스트:**
 
@@ -1079,15 +1136,16 @@
 
 ## [DOC-001] 문서와 구현 결과 동기화
 
-* **추천 브랜치명:** docs/sync-after-backend
-* **관련 명세서:** docs/01_PRD.md, docs/02_SRS.md, docs/03_ADR.md, docs/04_ERD.md, docs/05_Backend_Design.md, docs/06_Architecture.md, docs/07_API.md, docs/08_Implementation_Plan.md, docs/09_Test_Strategy.md, docs/10_Portfolio_README.md, docs/11_Wireframe.md
+* **추천 브랜치명:** feature/ticket-doc-001
+* **상태:** TODO
+* **관련 명세서:** docs/01_PRD.md, docs/02_SRS.md, docs/03_ADR.md, docs/04_ERD.md, docs/05_Backend_Design.md, docs/06_Architecture.md, docs/07_API.md, docs/08_Implementation.md, docs/09_Test_Strategy.md, docs/10_Portfolio_README.md, docs/11_Wireframe.md
 * **체크리스트:**
 
   * [ ] 구현된 API와 docs/07_API.md 비교
   * [ ] 실제 Entity와 docs/04_ERD.md 비교
   * [ ] 실제 패키지 구조와 docs/05_Backend_Design.md 비교
   * [ ] 실제 Docker 구조와 docs/06_Architecture.md 비교
-  * [ ] 구현 순서 변경 사항 docs/08_Implementation_Plan.md 반영
+  * [ ] 구현 순서 변경 사항 docs/08_Implementation.md 반영
   * [ ] 테스트 작성 결과 docs/09_Test_Strategy.md 반영
   * [ ] README의 기술 스택과 실행 방법 최신화
   * [ ] 변경된 결정이 있으면 docs/03_ADR.md에 추가
@@ -1096,11 +1154,12 @@
 
 ## [DOC-002] 트러블슈팅 문서 작성
 
-* **추천 브랜치명:** docs/troubleshooting
+* **추천 브랜치명:** feature/ticket-doc-002
+* **상태:** TODO
 * **관련 명세서:** docs/10_Portfolio_README.md, docs/06_Architecture.md, docs/09_Test_Strategy.md
 * **체크리스트:**
 
-  * [ ] `docs/12_Troubleshooting.md` 생성
+  * [ ] `13_Troubleshooting.md` 생성
   * [ ] Docker Compose 실행 이슈 정리
   * [ ] Flyway migration 이슈 정리
   * [ ] JWT 인증 구현 이슈 정리
@@ -1114,8 +1173,9 @@
 
 ## [QA-001] MVP 핵심 시나리오 수동 검증
 
-* **추천 브랜치명:** test/mvp-smoke-test
-* **관련 명세서:** docs/08_Implementation_Plan.md, docs/09_Test_Strategy.md, docs/10_Portfolio_README.md
+* **추천 브랜치명:** feature/ticket-qa-001
+* **상태:** TODO
+* **관련 명세서:** docs/08_Implementation.md, docs/09_Test_Strategy.md, docs/10_Portfolio_README.md
 * **체크리스트:**
 
   * [ ] 카카오 로그인 흐름 검증

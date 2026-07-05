@@ -42,11 +42,11 @@ Check whether:
 - The PR clearly corresponds to exactly one ticket.
 - The implementation satisfies the target ticket checklist.
 - The implementation does not include unrelated scope.
-- API behavior matches `docs/07.API.md`.
+- API behavior matches `docs/07_API.md`.
 - Business rules match `docs/02_SRS.md`.
 - Database/entity behavior matches `docs/04_ERD.md`.
 - Backend responsibilities match `docs/05_Backend_Design.md`.
-- Tests satisfy the ticket and `docs/09_Test Strategy.md`.
+- Tests satisfy the ticket and `docs/09_Test_Strategy.md`.
 - Documented behavior is not silently changed.
 - Future-scope features are not implemented unless explicitly required.
 

@@ -184,8 +184,8 @@ docs/*
 |dev|AI 리뷰를 통과한 개발 통합 브랜치|
 |pre-dev|Gemini 명세 검증을 통과한 티켓 브랜치를 임시 통합하는 브랜치|
 |feature/ticket-*|티켓 단위 기능 개발|
-|fix/*|버그 수정|
-|docs/*|문서 수정|
+|fix/*|사람 주도 ad-hoc 버그 수정. 티켓 작업에는 사용하지 않으며 `needs-human-review` 경로로 처리한다.|
+|docs/*|사람 주도 ad-hoc 문서 수정. 티켓 작업에는 사용하지 않으며 `needs-human-review` 경로로 처리한다.|
 
 ---
 

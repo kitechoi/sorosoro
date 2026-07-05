@@ -101,6 +101,8 @@ Brief Korean summary of the PR quality.
 
 List only issues that must be fixed before merge.
 
+For Claude Round 1, list at most 5 Blocking Issues. If there are more than 5, include only the 5 most severe blockers and move the rest to Recommended Improvements.
+
 Use this format:
 
 - [BLOCKER] Description
@@ -111,6 +113,26 @@ Use this format:
 If there are no blocking issues, write:
 
 - None
+
+### Follow-up Scope
+
+For Round 1, list the exact items that Round 2 must verify.
+
+If no follow-up is needed, write:
+
+- None
+
+### Round 2 Blocker Resolution
+
+Use this section only for Round 2.
+
+| Previous Blocker | Status | Evidence |
+|---|---|---|
+| blocker | RESOLVED/NOT_RESOLVED | file, diff, or test evidence |
+
+If this is not Round 2, write:
+
+- Not applicable
 
 ### Recommended Improvements
 
@@ -127,6 +149,22 @@ Ask only if clarification is genuinely required.
 If none, write:
 
 - None
+
+### AI Review Log
+
+Include the review history and conflict status.
+
+| 시점 | 모델 | 판정 | 근거 요약 |
+|---|---|---|---|
+| 1차 | Gemini Flash | APPROVE/REJECT |  |
+| N차 | Claude Sonnet | MERGE_READY/CHANGES_REQUESTED |  |
+
+Conflict rule:
+
+- A difference between Gemini's result/specification validation and Claude's process/code validation is not a conflict.
+- Only directly contradictory conclusions about the same item are a conflict.
+- If there is a real conflict, state `Conflict: YES` and request `needs-human-review`.
+- Otherwise, state `Conflict: NO`.
 
 ### Final PR Comment
 
