@@ -1,0 +1,4 @@
+# Reuses the PoC's Gemini and HTML parsing dependencies; no UI/SQLite/Notion runtime.
+google-genai==2.10.0
+html2text==2025.4.15
+pydantic>=2.10,<3

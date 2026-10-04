@@ -2,10 +2,14 @@ package com.sorosoro.fabric.repository;
 
 import com.sorosoro.fabric.domain.Fabric;
 import com.sorosoro.user.domain.User;
-import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface FabricRepository extends JpaRepository<Fabric, Long> {
+import java.util.List;
+
+public interface FabricRepository
+        extends JpaRepository<Fabric, Long>,
+                org.springframework.data.jpa.repository.JpaSpecificationExecutor<Fabric> {
 
     List<Fabric> findByUserOrderByCreatedAtDesc(User user);
 

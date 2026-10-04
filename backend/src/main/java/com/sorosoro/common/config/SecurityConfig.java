@@ -4,14 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sorosoro.auth.infrastructure.JwtAuthenticationFilter;
 import com.sorosoro.common.exception.ErrorCode;
 import com.sorosoro.common.response.ErrorResponse;
+
 import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -31,29 +33,42 @@ public class SecurityConfig {
     }
 
     private static final String[] PUBLIC_ENDPOINTS = {
-            "/actuator/health",
-            "/actuator/health/**",
-            "/swagger-ui/**",
-            "/v3/api-docs/**",
-            "/api/v1/auth/kakao/login",
-            "/api/v1/auth/reissue"
+        "/imports/",
+        "/imports/index.html",
+        "/imports/app.js",
+        "/imports/style.css",
+        "/api/v1/import-ui-config",
+        "/api/v1/local-demo/login",
+        "/actuator/health",
+        "/actuator/health/**",
+        "/swagger-ui/**",
+        "/v3/api-docs/**",
+        "/api/v1/auth/kakao/login",
+        "/api/v1/auth/reissue"
     };
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .csrf(AbstractHttpConfigurer::disable)
+        return http.csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(authenticationEntryPoint())
-                        .accessDeniedHandler(accessDeniedHandler()))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .anyRequest().authenticated())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .sessionManagement(
+                        session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(
+                        exception ->
+                                exception
+                                        .authenticationEntryPoint(authenticationEntryPoint())
+                                        .accessDeniedHandler(accessDeniedHandler()))
+                .authorizeHttpRequests(
+                        auth ->
+                                auth.requestMatchers(PUBLIC_ENDPOINTS)
+                                        .permitAll()
+                                        .requestMatchers(HttpMethod.OPTIONS, "/**")
+                                        .permitAll()
+                                        .anyRequest()
+                                        .authenticated())
+                .addFilterBefore(
+                        jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
@@ -76,7 +91,8 @@ public class SecurityConfig {
         };
     }
 
-    private void writeErrorResponse(HttpServletResponse response, ErrorCode errorCode) throws java.io.IOException {
+    private void writeErrorResponse(HttpServletResponse response, ErrorCode errorCode)
+            throws java.io.IOException {
         response.setStatus(errorCode.getStatus().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");

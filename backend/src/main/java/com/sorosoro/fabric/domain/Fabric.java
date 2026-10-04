@@ -2,6 +2,7 @@ package com.sorosoro.fabric.domain;
 
 import com.sorosoro.common.domain.BaseTimeEntity;
 import com.sorosoro.user.domain.User;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,11 +14,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.time.LocalDate;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
 
 @Getter
 @Entity
@@ -54,6 +57,9 @@ public class Fabric extends BaseTimeEntity {
     @Column(name = "purchase_price")
     private Integer purchasePrice;
 
+    @Column(name = "purchase_quantity", length = 100)
+    private String purchaseQuantity;
+
     @Column(name = "color", length = 100)
     private String color;
 
@@ -77,10 +83,23 @@ public class Fabric extends BaseTimeEntity {
     private RepurchaseIntention repurchaseIntention;
 
     @Builder
-    public Fabric(User user, String name, String productName, String productCode, String productUrl,
-                  String storeName, LocalDate purchasedAt, Integer purchasePrice, String color,
-                  String size, String width, String materialComposition, String memo, Integer rating,
-                  RepurchaseIntention repurchaseIntention) {
+    public Fabric(
+            User user,
+            String name,
+            String productName,
+            String productCode,
+            String productUrl,
+            String storeName,
+            LocalDate purchasedAt,
+            Integer purchasePrice,
+            String purchaseQuantity,
+            String color,
+            String size,
+            String width,
+            String materialComposition,
+            String memo,
+            Integer rating,
+            RepurchaseIntention repurchaseIntention) {
         this.user = user;
         this.name = name;
         this.productName = productName;
@@ -89,12 +108,38 @@ public class Fabric extends BaseTimeEntity {
         this.storeName = storeName;
         this.purchasedAt = purchasedAt;
         this.purchasePrice = purchasePrice;
+        this.purchaseQuantity = purchaseQuantity;
         this.color = color;
         this.size = size;
         this.width = width;
         this.materialComposition = materialComposition;
         this.memo = memo;
         this.rating = rating;
-        this.repurchaseIntention = repurchaseIntention == null ? RepurchaseIntention.UNKNOWN : repurchaseIntention;
+        this.repurchaseIntention =
+                repurchaseIntention == null ? RepurchaseIntention.UNKNOWN : repurchaseIntention;
+    }
+
+    public void reviseFrom(Fabric value) {
+        name = value.name;
+        productName = value.productName;
+        productCode = value.productCode;
+        productUrl = value.productUrl;
+        storeName = value.storeName;
+        purchasedAt = value.purchasedAt;
+        purchasePrice = value.purchasePrice;
+        purchaseQuantity = value.purchaseQuantity;
+        color = value.color;
+        size = value.size;
+        width = value.width;
+        materialComposition = value.materialComposition;
+        memo = value.memo;
+        rating = value.rating;
+        repurchaseIntention = value.repurchaseIntention;
+    }
+
+    public void enrich(String url, String material, String fabricWidth) {
+        if (productUrl == null) productUrl = url;
+        if (materialComposition == null) materialComposition = material;
+        if (width == null) width = fabricWidth;
     }
 }

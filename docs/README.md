@@ -145,3 +145,7 @@ The documentation is the single source of truth.
 Prompts should define how AI agents think and review.
 Prompts should not duplicate large amounts of project-specific business rules.
 Project-specific rules must live in `docs/`.
+
+## AI-001 current integration
+
+[13_Receipt_Import.md](13_Receipt_Import.md) records the user-approved receipt-first scope and supersedes the earlier AI future-scope/review-required policy for this ticket.

@@ -2447,3 +2447,6 @@ Worker
 - 이미지 리사이징은 Worker가 비동기로 처리한다.
     
 - Calendar와 Contribution은 별도 저장 없이 조회 시 계산한다.
+# AI-001 주문 캡처 가져오기
+
+2026-10-04 신규 API와 기존 Fabric 조회/수정 연결 범위는 [13_Receipt_Import.md](13_Receipt_Import.md)의 API 절을 따른다. 기존 Fabric 구매 필드 의미는 유지한다.

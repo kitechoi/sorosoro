@@ -1,4 +1,8 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
   application:
     name: sorosoro-backend
   profiles:
@@ -34,3 +38,10 @@ kakao:
     client-secret: ${KAKAO_CLIENT_SECRET:}
     token-uri: ${KAKAO_TOKEN_URI:https://kauth.kakao.com/oauth/token}
     user-info-uri: ${KAKAO_USER_INFO_URI:https://kapi.kakao.com/v2/user/me}
+
+# Receipt ingestion and enrichment run independently of optional shopping sites.
+fabric:
+  import:
+    enabled: ${FABRIC_IMPORT_ENABLED:true}
+    worker-url: ${FABRIC_WORKER_URL:http://localhost:8091}
+    worker-token: ${FABRIC_WORKER_TOKEN:}

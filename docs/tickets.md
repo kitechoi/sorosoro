@@ -1444,3 +1444,14 @@
   * [ ] complete-upload 검증
   * [ ] Worker READY 처리 검증
   * [ ] README에 수동 검증 결과 정리
+
+## [AI-001] 주문 캡처에서 소로소로 원단 자동 등록 통합
+
+- 브랜치: feature/ticket-ai-001 / 대상: pre-dev
+- 관련 명세: docs/13_Receipt_Import.md (2026-10-04 사용자 승인 범위; 이 티켓의 AI 정책은 기존 future-scope/필수검수 정책을 대체)
+- [x] JWT 소유권을 적용한 원본 업로드/작업 상태/조회/재시도/취소
+- [x] Python receipt 추출 및 사이트별 독립적인 선택 보강
+- [x] 구매 기록 자동 저장, 원문/금액 의미 보존, 재전송/겹친 주문 처리
+- [x] 모바일 웹 업로드·진행·결과·수정 UI
+- [x] Flyway, Docker Compose, 실행 안내
+- [x] PostgreSQL/HTTP 통합 및 Python 테스트, 브라우저 사용자 흐름 검증

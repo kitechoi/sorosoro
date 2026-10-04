@@ -1496,3 +1496,6 @@ MVP에서는 재고 수량을 관리하지 않는다.
 - Calendar와 Contribution은 별도 테이블로 저장하지 않고 조회 시 계산한다.
     
 - AI 원단 자동 기록은 MVP에서 제외하고 향후 확장으로 둔다.
+# AI-001 데이터 확장
+
+2026-10-04: `fabric_import_jobs`(사용자, 이미지 hash/원본, 상태/lease/오류)와 `fabric_import_items`(작업, 추출 원문, 주문정보, 구매정보, 생성 Fabric, 확인/보강 상태)를 추가한다. 상세 정책은 [13_Receipt_Import.md](13_Receipt_Import.md)를 따른다. 기존 Fabric 상품 URL에 unique 제약을 추가하지 않는다.

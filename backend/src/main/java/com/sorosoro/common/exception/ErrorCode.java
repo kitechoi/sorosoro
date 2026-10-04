@@ -3,6 +3,10 @@ package com.sorosoro.common.exception;
 import org.springframework.http.HttpStatus;
 
 public enum ErrorCode {
+    FABRIC_NOT_FOUND(HttpStatus.NOT_FOUND, "FAB-001", "원단을 찾을 수 없습니다."),
+    IMPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "IMP-001", "가져오기 작업을 찾을 수 없습니다."),
+    IMPORT_CONFLICT(HttpStatus.CONFLICT, "IMP-002", "현재 상태에서는 이 작업을 처리할 수 없습니다."),
+    INVALID_IMAGE(HttpStatus.BAD_REQUEST, "IMP-003", "10MB 이하의 PNG, JPEG, WebP 이미지를 선택해주세요."),
     INVALID_REQUEST(HttpStatus.BAD_REQUEST, "COM-001", "요청값이 올바르지 않습니다."),
     VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "COM-002", "입력값 검증에 실패했습니다."),
     FORBIDDEN(HttpStatus.FORBIDDEN, "COM-003", "접근 권한이 없습니다."),
