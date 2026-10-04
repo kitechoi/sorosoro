@@ -10,11 +10,26 @@ services:
       DB_URL: ${DB_URL:-jdbc:postgresql://postgres:5432/sorosoro}
       DB_USERNAME: ${DB_USERNAME:-sorosoro}
       DB_PASSWORD: ${DB_PASSWORD:-sorosoro}
+      JWT_SECRET: ${JWT_SECRET:-sorosoro-local-development-secret-key-must-be-at-least-32-bytes}
+      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID:-}
+      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET:-}
+      FABRIC_WORKER_URL: http://receipt-worker:8091
+      FABRIC_WORKER_TOKEN: ${FABRIC_WORKER_TOKEN:-}
     ports:
-      - "${APP_PORT:-8080}:8080"
+      - "${APP_BIND_ADDRESS:-127.0.0.1}:${APP_PORT:-8080}:8080"
     depends_on:
       postgres:
         condition: service_healthy
+    restart: unless-stopped
+
+  receipt-worker:
+    profiles: [receipt]
+    build: ./ai-worker
+    environment:
+      FABRIC_WORKER_TOKEN: ${FABRIC_WORKER_TOKEN:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.1-flash-lite}
+      ENABLED_ENRICHMENT_SELLERS: ${ENABLED_ENRICHMENT_SELLERS-패션스타트}
     restart: unless-stopped
 
   postgres:
@@ -25,7 +40,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-sorosoro}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sorosoro}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -34,6 +49,5 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
-
 volumes:
   postgres_data:
