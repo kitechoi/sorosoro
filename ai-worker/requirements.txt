@@ -1,0 +1,4 @@
+# Gemini receipt extraction and validated product-photo decoding; no UI/SQLite/Notion runtime.
+google-genai==2.10.0
+pillow==12.2.0
+pydantic>=2.10,<3

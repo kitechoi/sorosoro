@@ -1,3 +1,39 @@
+## 주문 캡처 원단 가져오기 (AI-001)
+
+**패션스타트 주문 캡처 → 구매 정보 + 실제 상품 사진 + 소재 + 원단폭**을 원단 보관함에 모읍니다.
+상품 URL 입력은 필요하지 않습니다. 캡처에 품번이 없어도 정확한 상품명과 명시된 옵션으로 검색합니다.
+필수 상세 정보가 모두 저장된 항목만 ‘수집 완료’입니다. 부족한 항목은 이유를 표시하고 수정·재시도할 수 있습니다.
+MVP 지원 판매처는 패션스타트 한 곳입니다. 다른 판매처의 캡처 구매 정보가 저장되더라도 상세 수집 미완료로 남습니다.
+
+### 로컬 실행
+
+1. `.env.example`을 `.env`로 복사합니다.
+2. `GEMINI_API_KEY`와 무작위 `FABRIC_WORKER_TOKEN`을 설정합니다.
+3. 개인용 로컬 확인은 `SPRING_PROFILES_ACTIVE=local,local-demo`로 실행합니다.
+   공개 서비스에서는 이 프로필을 쓰지 않고 카카오 로그인 설정을 사용합니다. `prod`에서는 로컬 데모 로그인이 비활성화됩니다.
+4. `docker compose --profile receipt up --build` 후 [원단 보관함](http://localhost:8080/imports/)을 엽니다.
+   기본 포트는 loopback에만 연결됩니다. 원본은 PostgreSQL의 private 이미지로 7일 보관합니다.
+
+`ENABLED_ENRICHMENT_SELLERS=`로 상세 수집을 끄면 구매 기록만 저장되고 MVP 완료 기준은 충족하지 않습니다.
+이미지에서 상품명을 읽지 못하거나 같은 주문 항목이 겹치면 해당 항목만 확인 대상으로 남습니다.
+같은 이미지 재전송은 기존 작업을 반환하고 같은 상품의 별도 주문/다른 옵션 구매는 허용합니다.
+
+### 검증
+
+```sh
+cd backend
+./gradlew test  # Docker 필요: 실제 PostgreSQL/Flyway/JWT/HTTP 통합
+cd ../ai-worker
+python -m pip install -r requirements.txt pytest
+PYTHONPATH=. python -m pytest tests -q
+```
+
+모델 대체 자동 테스트와 실제 Gemini/판매처를 사용하는 브라우저 검증을 구분합니다. 구체적인 결과와 샘플 범위는 아래 검증 문서를 참고하세요. 카카오 실로그인, 다양한 개인 주문의 추출 정확도와 운영 배포는 아직 검증하지 않았습니다.
+
+[구현 범위·API·데이터 정책·검증 결과](docs/13_Receipt_Import.md). 아래 기존 서비스 전체 설명에는 아직 구현되지 않은 계획이 포함됩니다.
+
+---
+
 # 소로소로(SOROSORO)
 
 > 하루하루 재봉 과정을 기록하는 개인 재봉일기 서비스

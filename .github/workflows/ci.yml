@@ -44,3 +44,18 @@ jobs:
 
       - name: Run tests
         run: ./gradlew test
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Test receipt worker
+        working-directory: ai-worker
+        run: |
+          python -m pip install -r requirements.txt pytest==9.1.1
+          PYTHONPATH=. python -m pytest tests -q
+
+      - name: Validate receipt Compose configuration
+        working-directory: .
+        run: docker compose --profile receipt config --quiet
