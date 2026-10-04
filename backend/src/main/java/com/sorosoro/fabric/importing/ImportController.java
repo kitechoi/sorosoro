@@ -82,6 +82,14 @@ public class ImportController {
         service.dismiss(user.userId(), id, itemId);
     }
 
+    @PostMapping("/{id}/items/{itemId}/retry-enrichment")
+    public Map<String, Object> retryEnrichment(
+            @AuthenticationPrincipal AuthUserPrincipal user,
+            @PathVariable UUID id,
+            @PathVariable long itemId) {
+        return service.retryEnrichment(user.userId(), id, itemId);
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void cancel(@AuthenticationPrincipal AuthUserPrincipal user, @PathVariable UUID id) {

@@ -1499,3 +1499,5 @@ MVP에서는 재고 수량을 관리하지 않는다.
 # AI-001 데이터 확장
 
 2026-10-04: `fabric_import_jobs`(사용자, 이미지 hash/원본, 상태/lease/오류)와 `fabric_import_items`(작업, 추출 원문, 주문정보, 구매정보, 생성 Fabric, 확인/보강 상태)를 추가한다. 상세 정책은 [13_Receipt_Import.md](13_Receipt_Import.md)를 따른다. 기존 Fabric 상품 URL에 unique 제약을 추가하지 않는다.
+
+`V3__complete_fabric_details.sql`은 `fabric_product_photos`(Fabric당 1개, JPEG bytes/원본 URL/hash, FK cascade), `fabrics.has_product_photo`, 항목별 미완료 이유와 소재/폭/URL 수정 보호 필드를 추가한다. 상품 사진은 기존 S3 개인 첨부 Photo와 별개이며 원단 삭제·가져오기 취소 때 함께 삭제한다. 이전 사진 없는 COMPLETE는 재수집하도록 전환한다.

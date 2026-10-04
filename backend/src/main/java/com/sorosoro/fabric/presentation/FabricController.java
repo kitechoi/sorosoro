@@ -8,7 +8,10 @@ import com.sorosoro.fabric.dto.*;
 
 import jakarta.validation.Valid;
 
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,6 +47,17 @@ public class FabricController {
     public FabricResponse get(
             @AuthenticationPrincipal AuthUserPrincipal user, @PathVariable long id) {
         return service.get(user.userId(), id);
+    }
+
+    @GetMapping("/{id}/product-photo")
+    public ResponseEntity<byte[]> productPhoto(
+            @AuthenticationPrincipal AuthUserPrincipal user, @PathVariable long id) {
+        var photo = service.productPhoto(user.userId(), id);
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .contentType(MediaType.IMAGE_JPEG)
+                .header("X-Content-Type-Options", "nosniff")
+                .body((byte[]) photo.get("bytes"));
     }
 
     @DeleteMapping("/{id}")

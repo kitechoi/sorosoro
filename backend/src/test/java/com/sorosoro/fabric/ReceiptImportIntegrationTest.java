@@ -14,6 +14,8 @@ import com.sorosoro.user.repository.UserRepository;
 import com.sun.net.httpserver.HttpServer;
 
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -313,7 +315,7 @@ class ReceiptImportIntegrationTest {
         long fid = fabrics.findAll().get(0).getId();
         db.update(
                 "INSERT INTO photos(user_id,owner_type,owner_id,original_key,sort_order,status)"
-                    + " VALUES(?,'FABRIC',?,'test-photo',0,'READY')",
+                        + " VALUES(?,'FABRIC',?,'test-photo',0,'READY')",
                 user.getId(),
                 fid);
         mvc.perform(delete("/api/v1/fabric-imports/" + id).header("Authorization", auth))
@@ -443,6 +445,185 @@ class ReceiptImportIntegrationTest {
         imports.claim();
         assertThat(job(id).path("image_available").asBoolean()).isFalse();
         assertThat(fabrics.count()).isEqualTo(2);
+    }
+
+    com.fasterxml.jackson.databind.node.ObjectNode fullDetails() throws Exception {
+        var photo =
+                new java.awt.image.BufferedImage(96, 96, java.awt.image.BufferedImage.TYPE_INT_RGB);
+        var output = new java.io.ByteArrayOutputStream();
+        javax.imageio.ImageIO.write(photo, "JPEG", output);
+        var value = json.createObjectNode();
+        value.put("status", "COMPLETE");
+        value.put("productUrl", "https://fashionstart.net/goods/goods_view.php?goodsNo=1");
+        value.put("materialComposition", "면100%");
+        value.put("width", "110cm");
+        value.put("imageMimeType", "image/jpeg");
+        value.put("imageSourceUrl", "https://img.kohasid.com/photos/goods/test/photo.jpg");
+        value.put("imageBase64", Base64.getEncoder().encodeToString(output.toByteArray()));
+        return value;
+    }
+
+    @Test
+    void photoAndAllDetailsPersistWithPrivateReadAndCascadeDelete() throws Exception {
+        UUID id = submit(image);
+        process();
+        var work = imports.claimEnrichment();
+        long fid =
+                db.queryForObject(
+                        "SELECT fabric_id FROM fabric_import_items WHERE id=?",
+                        Long.class,
+                        work.itemId());
+        var details = fullDetails();
+        imports.enriched(work, details);
+        assertThat(job(id).path("items").get(0).path("enrichment_status").asText())
+                .isEqualTo("COMPLETE");
+        mvc.perform(get("/api/v1/fabrics/" + fid).header("Authorization", auth))
+                .andExpect(jsonPath("$.detailsComplete").value(true))
+                .andExpect(
+                        jsonPath("$.thumbnailUrl")
+                                .value("/api/v1/fabrics/" + fid + "/product-photo"));
+        String path = "/api/v1/fabrics/" + fid + "/product-photo";
+        mvc.perform(get(path)).andExpect(status().isUnauthorized());
+        mvc.perform(get(path).header("Authorization", otherAuth)).andExpect(status().isForbidden());
+        mvc.perform(get(path).header("Authorization", auth))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(
+                        content()
+                                .bytes(
+                                        Base64.getDecoder()
+                                                .decode(details.path("imageBase64").asText())));
+        db.update(
+                "UPDATE fabric_import_jobs SET updated_at=now()-interval '8 days' WHERE id=?", id);
+        imports.claim();
+        assertThat(job(id).path("image_available").asBoolean()).isFalse();
+        mvc.perform(get(path).header("Authorization", auth)).andExpect(status().isOk());
+        imports.cancel(user.getId(), id);
+        imports.enriched(work, details);
+        assertThat(db.queryForObject("SELECT count(*) FROM fabric_product_photos", Long.class))
+                .isZero();
+        assertThat(fabrics.count()).isZero();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"imageBase64", "materialComposition", "width"})
+    void missingAnyRequiredDetailCannotClaimCompletion(String missing) throws Exception {
+        UUID id = submit(image);
+        process();
+        var work = imports.claimEnrichment();
+        var details = fullDetails();
+        details.remove(missing);
+        imports.enriched(work, details);
+        assertThat(job(id).path("items").get(0).path("enrichment_status").asText())
+                .isEqualTo("INCOMPLETE");
+        assertThat(fabrics.count()).isEqualTo(2);
+    }
+
+    @Test
+    void corruptOrOffsitePhotoDoesNotCountAsComplete() throws Exception {
+        UUID id = submit(image);
+        process();
+        var work = imports.claimEnrichment();
+        var details = fullDetails();
+        details.put("imageBase64", Base64.getEncoder().encodeToString("not JPEG".getBytes()));
+        imports.enriched(work, details);
+        assertThat(job(id).path("items").get(0).path("enrichment_status").asText())
+                .isEqualTo("INCOMPLETE");
+        imports.retryEnrichment(user.getId(), id, work.itemId());
+        work = imports.claimEnrichment();
+        details = fullDetails();
+        details.put("imageSourceUrl", "https://evil.test/photo.jpg");
+        imports.enriched(work, details);
+        assertThat(db.queryForObject("SELECT count(*) FROM fabric_product_photos", Long.class))
+                .isZero();
+    }
+
+    @Test
+    void nameOnlyEditDoesNotBlockPhotoAndSpecs() throws Exception {
+        UUID id = submit(image);
+        process();
+        var work = imports.claimEnrichment();
+        long fid =
+                db.queryForObject(
+                        "SELECT fabric_id FROM fabric_import_items WHERE id=?",
+                        Long.class,
+                        work.itemId());
+        mvc.perform(
+                        put("/api/v1/fabrics/" + fid)
+                                .header("Authorization", auth)
+                                .contentType("application/json")
+                                .content(
+                                        "{\"name\":\"나의 셔츠용 원단\",\"productName\":\"면"
+                                                + " 원단\",\"storeName\":\"천가게\",\"color\":\"흰색\"}"))
+                .andExpect(status().isOk());
+        imports.enriched(work, fullDetails());
+        var f = fabrics.findById(fid).orElseThrow();
+        assertThat(f.getName()).isEqualTo("나의 셔츠용 원단");
+        assertThat(f.detailsComplete()).isTrue();
+    }
+
+    @Test
+    void correctedIdentityInvalidatesOldResultAndRetryPreservesClearedWidth() throws Exception {
+        UUID id = submit(image);
+        process();
+        var old = imports.claimEnrichment();
+        long fid =
+                db.queryForObject(
+                        "SELECT fabric_id FROM fabric_import_items WHERE id=?",
+                        Long.class,
+                        old.itemId());
+        mvc.perform(
+                        put("/api/v1/fabrics/" + fid)
+                                .header("Authorization", auth)
+                                .contentType("application/json")
+                                .content(
+                                        "{\"name\":\"고친 상품\",\"productName\":\"체크"
+                                            + " 원단\",\"productCode\":\"73-929\",\"storeName\":\"패션스타트\"}"))
+                .andExpect(status().isOk());
+        imports.enriched(old, fullDetails());
+        assertThat(db.queryForObject("SELECT count(*) FROM fabric_product_photos", Long.class))
+                .isZero();
+        var current = imports.claimEnrichment();
+        assertThat(current.productCode()).isEqualTo("73-929");
+        assertThat(current.name()).isEqualTo("체크 원단");
+        imports.enriched(current, fullDetails());
+        mvc.perform(
+                        put("/api/v1/fabrics/" + fid)
+                                .header("Authorization", auth)
+                                .contentType("application/json")
+                                .content(
+                                        "{\"name\":\"고친 상품\",\"productName\":\"체크"
+                                            + " 원단\",\"productCode\":\"73-929\",\"storeName\":\"패션스타트\",\"materialComposition\":\"사용자"
+                                            + " 소재\",\"width\":null}"))
+                .andExpect(status().isOk());
+        mvc.perform(
+                        post("/api/v1/fabric-imports/"
+                                        + id
+                                        + "/items/"
+                                        + old.itemId()
+                                        + "/retry-enrichment")
+                                .header("Authorization", otherAuth))
+                .andExpect(status().isForbidden());
+        imports.retryEnrichment(user.getId(), id, old.itemId());
+        imports.enriched(imports.claimEnrichment(), fullDetails());
+        var f = fabrics.findById(fid).orElseThrow();
+        assertThat(f.getWidth()).isNull();
+        assertThat(f.getMaterialComposition()).isEqualTo("사용자 소재");
+        assertThat(f.detailsComplete()).isFalse();
+        assertThat(
+                        db.queryForObject(
+                                "SELECT count(*) FROM fabric_product_photos WHERE fabric_id=?",
+                                Long.class,
+                                fid))
+                .isEqualTo(1);
+        mvc.perform(delete("/api/v1/fabrics/" + fid).header("Authorization", auth))
+                .andExpect(status().isNoContent());
+        assertThat(
+                        db.queryForObject(
+                                "SELECT count(*) FROM fabric_product_photos WHERE fabric_id=?",
+                                Long.class,
+                                fid))
+                .isZero();
     }
 
     @Test

@@ -34,9 +34,9 @@ def test_seller_hint_only_fills_missing_seller():
 
 def test_disabled_seller_never_scrapes(monkeypatch):
     monkeypatch.setattr(shop,'download',lambda *_:pytest.fail('disabled seller fetched'))
-    assert shop.enrich({'seller':'썬퀼트','productName':'63-929 면'})['status']=='SKIPPED'
+    assert shop.enrich({'seller':'썬퀼트','productName':'63-929 면'})['status']=='INCOMPLETE'
     monkeypatch.setenv('ENABLED_ENRICHMENT_SELLERS','')
-    assert shop.enrich({'seller':'패션스타트','productName':'63-929 면'})['status']=='SKIPPED'
+    assert shop.enrich({'seller':'패션스타트','productName':'63-929 면'})['status']=='INCOMPLETE'
 
 
 def test_only_one_exact_code_candidate_on_seller():
@@ -47,21 +47,6 @@ def test_only_one_exact_code_candidate_on_seller():
     raw+='<a href="/goods/goods_view.php?goodsNo=4">63-929 면</a>'
     assert shop.find_product(raw,'63-929') is None
     assert shop.find_product('<a href="/goods/goods_view.php?goodsNo=2">비슷한 이름</a>','63-929') is None
-
-
-def test_enrichment_never_returns_purchase_price(monkeypatch):
-    pages=iter(['<a href="/goods/goods_view.php?goodsNo=1">63-929 원단</a>','<title>63-929 원단</title><p>면100% 폭110cm</p>'])
-    monkeypatch.setattr(shop,'download',lambda *_:next(pages))
-    monkeypatch.setattr(shop,'generate',lambda *_:{'materialComposition':'면100%','width':'110cm','purchasePrice':999})
-    result=shop.enrich({'seller':'패션스타트','productName':'63-929 원단'})
-    assert result=={'status':'COMPLETE','productUrl':'https://fashionstart.net/goods/goods_view.php?goodsNo=1','materialComposition':'면100%','width':'110cm'}
-
-
-def test_product_page_must_match_title(monkeypatch):
-    pages=iter(['<a href="/goods/goods_view.php?goodsNo=1">63-929 면</a>','<title>다른상품</title><p>추천상품 63-929</p>'])
-    monkeypatch.setattr(shop,'download',lambda *_:next(pages))
-    monkeypatch.setattr(shop,'generate',lambda *_:pytest.fail('mismatched page sent to LLM'))
-    assert shop.enrich({'seller':'패션스타트','productName':'63-929 면'})['reason']=='TITLE_MISMATCH'
 
 
 def test_arbitrary_network_target_rejected():

@@ -14,6 +14,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
+import java.util.Objects;
+
 @Service
 public class FabricService {
     private final FabricRepository fabrics;
@@ -55,11 +58,67 @@ public class FabricService {
     @Transactional
     public FabricResponse update(long userId, long id, FabricWriteRequest input) {
         // Lock import metadata before modifying Fabric; enrichment follows the same lock order.
-        jdbc.queryForList("SELECT id FROM fabric_import_items WHERE fabric_id=? FOR UPDATE", id);
+        var items =
+                jdbc.queryForList(
+                        "SELECT id,material_locked,width_locked,url_locked FROM fabric_import_items"
+                            + " WHERE fabric_id=? FOR UPDATE",
+                        id);
         Fabric f = owned(userId, id);
-        f.reviseFrom(input.toEntity(f.getUser()));
-        jdbc.update("UPDATE fabric_import_items SET edited=true WHERE fabric_id=?", id);
+        Fabric value = input.toEntity(f.getUser());
+        boolean identityChanged =
+                !Objects.equals(f.getProductName(), value.getProductName())
+                        || !Objects.equals(f.getProductCode(), value.getProductCode())
+                        || !Objects.equals(f.getStoreName(), value.getStoreName())
+                        || !Objects.equals(f.getColor(), value.getColor())
+                        || !Objects.equals(f.getSize(), value.getSize());
+        boolean materialChanged =
+                !Objects.equals(f.getMaterialComposition(), value.getMaterialComposition());
+        boolean widthChanged = !Objects.equals(f.getWidth(), value.getWidth());
+        boolean urlChanged = !Objects.equals(f.getProductUrl(), value.getProductUrl());
+        f.reviseFrom(value);
+        if (identityChanged && !items.isEmpty()) {
+            var locks = items.get(0);
+            f.clearGeneratedDetails(
+                    materialChanged || Boolean.TRUE.equals(locks.get("material_locked")),
+                    widthChanged || Boolean.TRUE.equals(locks.get("width_locked")),
+                    urlChanged || Boolean.TRUE.equals(locks.get("url_locked")));
+            jdbc.update("DELETE FROM fabric_product_photos WHERE fabric_id=?", id);
+        }
+        jdbc.update(
+                "UPDATE fabric_import_items SET edited=true,material_locked=material_locked OR"
+                    + " ?,width_locked=width_locked OR ?,url_locked=url_locked OR ? WHERE"
+                    + " fabric_id=?",
+                materialChanged,
+                widthChanged,
+                urlChanged,
+                id);
+        if (identityChanged) {
+            jdbc.update(
+                    "UPDATE fabric_import_items SET"
+                        + " enrichment_status='PENDING',enrichment_attempts=0,enrichment_token=NULL,enrichment_reason=NULL"
+                        + " WHERE fabric_id=?",
+                    id);
+        } else {
+            // A manual detail edit can make a completed record incomplete. A running
+            // extraction keeps its lease and sees the field locks before applying its result.
+            jdbc.update(
+                    "UPDATE fabric_import_items SET enrichment_status=?,enrichment_reason=? WHERE"
+                        + " fabric_id=? AND enrichment_status NOT IN ('PENDING','PROCESSING')",
+                    f.detailsComplete() ? "COMPLETE" : "INCOMPLETE",
+                    f.detailsComplete() ? null : "MISSING_DETAILS",
+                    id);
+        }
         return FabricResponse.from(fabrics.saveAndFlush(f));
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> productPhoto(long userId, long id) {
+        owned(userId, id);
+        var rows =
+                jdbc.queryForList(
+                        "SELECT bytes,mime_type FROM fabric_product_photos WHERE fabric_id=?", id);
+        if (rows.isEmpty()) throw new ApiException(ErrorCode.FABRIC_NOT_FOUND);
+        return rows.get(0);
     }
 
     @Transactional

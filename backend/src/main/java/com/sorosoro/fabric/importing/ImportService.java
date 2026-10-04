@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sorosoro.common.exception.*;
 import com.sorosoro.fabric.application.FabricService;
+import com.sorosoro.fabric.application.ProductPhotoStore;
 import com.sorosoro.fabric.domain.Fabric;
 import com.sorosoro.fabric.dto.FabricWriteRequest;
 import com.sorosoro.fabric.repository.FabricRepository;
@@ -22,22 +23,31 @@ public class ImportService {
     public record Work(UUID id, UUID token, byte[] image, String mimeType, String seller) {}
 
     public record Enrichment(
-            long itemId, UUID token, String seller, String name, String productCode) {}
+            long itemId,
+            UUID token,
+            String seller,
+            String name,
+            String productCode,
+            String color,
+            String size) {}
 
     private final JdbcTemplate db;
     private final FabricService fabrics;
     private final FabricRepository repository;
     private final ObjectMapper mapper;
+    private final ProductPhotoStore photos;
 
     public ImportService(
             JdbcTemplate db,
             FabricService fabrics,
             FabricRepository repository,
-            ObjectMapper mapper) {
+            ObjectMapper mapper,
+            ProductPhotoStore photos) {
         this.db = db;
         this.fabrics = fabrics;
         this.repository = repository;
         this.mapper = mapper;
+        this.photos = photos;
     }
 
     private Map<String, Object> owned(long userId, UUID id, boolean lock) {
@@ -121,7 +131,7 @@ public class ImportService {
                 "items",
                 db.queryForList(
                         "SELECT"
-                            + " id,item_index,product_name,product_code,color,size,quantity,amount_text,amount_type,line_total,purchased_at,seller,order_number,status,warning,fabric_id,enrichment_status"
+                            + " id,item_index,product_name,product_code,color,size,quantity,amount_text,amount_type,line_total,purchased_at,seller,order_number,status,warning,fabric_id,enrichment_status,enrichment_reason"
                             + " FROM fabric_import_items WHERE job_id=? ORDER BY item_index",
                         id));
         return result;
@@ -203,6 +213,30 @@ public class ImportService {
                     + " status='DISMISSED',enrichment_status='SKIPPED',enrichment_token=NULL WHERE"
                     + " id=?",
                 itemId);
+    }
+
+    @Transactional
+    public Map<String, Object> retryEnrichment(long userId, UUID id, long itemId) {
+        var job = owned(userId, id, true);
+        if (!"COMPLETED".equals(job.get("status")))
+            throw new ApiException(ErrorCode.IMPORT_CONFLICT);
+        var rows =
+                db.queryForList(
+                        "SELECT fabric_id,enrichment_status FROM fabric_import_items WHERE id=? AND"
+                                + " job_id=? FOR UPDATE",
+                        itemId,
+                        id);
+        if (rows.isEmpty()) throw new ApiException(ErrorCode.IMPORT_NOT_FOUND);
+        var row = rows.get(0);
+        if (row.get("fabric_id") == null) throw new ApiException(ErrorCode.IMPORT_CONFLICT);
+        if (!List.of("PENDING", "PROCESSING", "COMPLETE").contains(row.get("enrichment_status"))) {
+            db.update(
+                    "UPDATE fabric_import_items SET"
+                        + " enrichment_status='PENDING',enrichment_reason=NULL,enrichment_attempts=0,enrichment_token=NULL"
+                        + " WHERE id=?",
+                    itemId);
+        }
+        return get(userId, id);
     }
 
     @Transactional
@@ -389,17 +423,20 @@ public class ImportService {
     @Transactional
     public Enrichment claimEnrichment() {
         db.update(
-                "UPDATE fabric_import_items SET enrichment_status='FAILED',enrichment_token=NULL"
-                        + " WHERE enrichment_status='PROCESSING' AND enrichment_lease<now() AND"
-                        + " enrichment_attempts>=2");
+                "UPDATE fabric_import_items SET"
+                    + " enrichment_status='FAILED',enrichment_reason='TIMEOUT',enrichment_token=NULL"
+                    + " WHERE enrichment_status='PROCESSING' AND enrichment_lease<now() AND"
+                    + " enrichment_attempts>=2");
         var rows =
                 db.queryForList(
-                        "SELECT i.id,i.seller,i.product_name,i.product_code FROM"
-                            + " fabric_import_items i JOIN fabric_import_jobs j ON i.job_id=j.id"
-                            + " WHERE j.status='COMPLETED' AND i.fabric_id IS NOT NULL AND"
-                            + " (i.enrichment_status='PENDING' OR (i.enrichment_status='PROCESSING'"
-                            + " AND i.enrichment_lease<now())) AND i.enrichment_attempts<2 ORDER BY"
-                            + " i.id FOR UPDATE OF i SKIP LOCKED LIMIT 1");
+                        "SELECT i.id,f.store_name seller,COALESCE(f.product_name,f.name)"
+                            + " product_name,f.product_code,f.color,f.size FROM fabric_import_items"
+                            + " i JOIN fabric_import_jobs j ON i.job_id=j.id JOIN fabrics f ON"
+                            + " f.id=i.fabric_id WHERE j.status='COMPLETED' AND i.fabric_id IS NOT"
+                            + " NULL AND (i.enrichment_status='PENDING' OR"
+                            + " (i.enrichment_status='PROCESSING' AND i.enrichment_lease<now()))"
+                            + " AND i.enrichment_attempts<2 ORDER BY i.id FOR UPDATE OF i SKIP"
+                            + " LOCKED LIMIT 1");
         if (rows.isEmpty()) return null;
         var row = rows.get(0);
         long id = ((Number) row.get("id")).longValue();
@@ -415,24 +452,25 @@ public class ImportService {
                 token,
                 (String) row.get("seller"),
                 (String) row.get("product_name"),
-                (String) row.get("product_code"));
+                (String) row.get("product_code"),
+                (String) row.get("color"),
+                (String) row.get("size"));
     }
 
     @Transactional
     public void enriched(Enrichment work, JsonNode result) {
         var rows =
                 db.queryForList(
-                        "SELECT fabric_id,edited FROM fabric_import_items WHERE id=? AND"
-                            + " enrichment_token=? AND enrichment_status='PROCESSING' FOR UPDATE",
+                        "SELECT fabric_id,material_locked,width_locked,url_locked FROM"
+                                + " fabric_import_items WHERE id=? AND enrichment_token=? AND"
+                                + " enrichment_status='PROCESSING' FOR UPDATE",
                         work.itemId(),
                         work.token());
         if (rows.isEmpty()) return;
-        String state = "SKIPPED";
+        String state = "INCOMPLETE";
+        String reason = result == null ? "NETWORK_ERROR" : text(result, "reason", 80);
         var row = rows.get(0);
-        if (result != null
-                && "COMPLETE".equals(result.path("status").asText())
-                && row.get("fabric_id") != null
-                && !Boolean.TRUE.equals(row.get("edited"))) {
+        if (result != null && row.get("fabric_id") != null) {
             Fabric f =
                     repository.findById(((Number) row.get("fabric_id")).longValue()).orElse(null);
             String url = text(result, "productUrl", 2000);
@@ -441,15 +479,26 @@ public class ImportService {
                     && url.matches(
                             "https://(?:www\\.)?fashionstart\\.net/goods/goods_view\\.php\\?goodsNo=[0-9]+")) {
                 f.enrich(
-                        url, text(result, "materialComposition", 5000), text(result, "width", 100));
+                        Boolean.TRUE.equals(row.get("url_locked")) ? null : url,
+                        Boolean.TRUE.equals(row.get("material_locked"))
+                                ? null
+                                : text(result, "materialComposition", 5000),
+                        Boolean.TRUE.equals(row.get("width_locked"))
+                                ? null
+                                : text(result, "width", 100));
+                if (photos.save(f.getId(), result)) f.productPhotoSaved();
                 repository.saveAndFlush(f);
-                state = "COMPLETE";
+                if (f.detailsComplete()) {
+                    state = "COMPLETE";
+                    reason = null;
+                } else if (reason == null) reason = "MISSING_DETAILS";
             }
         } else if (result == null) state = "FAILED";
         db.update(
-                "UPDATE fabric_import_items SET enrichment_status=?,enrichment_token=NULL WHERE"
-                        + " id=?",
+                "UPDATE fabric_import_items SET"
+                    + " enrichment_status=?,enrichment_reason=?,enrichment_token=NULL WHERE id=?",
                 state,
+                reason == null && !"COMPLETE".equals(state) ? "NO_MATCH" : reason,
                 work.itemId());
     }
 

@@ -2450,3 +2450,5 @@ Worker
 # AI-001 주문 캡처 가져오기
 
 2026-10-04 신규 API와 기존 Fabric 조회/수정 연결 범위는 [13_Receipt_Import.md](13_Receipt_Import.md)의 API 절을 따른다. 기존 Fabric 구매 필드 의미는 유지한다.
+
+사진·소재·폭을 모두 갖춘 경우에만 `Fabric.detailsComplete=true`다. `thumbnailUrl`은 인증이 필요한 `GET /api/v1/fabrics/{id}/product-photo`를 가리킨다. `POST /api/v1/fabric-imports/{id}/items/{itemId}/retry-enrichment`로 현재 수정된 상품 정보의 상세 수집을 재시도한다. 기존 개인 첨부 Photo API와 구분한다.

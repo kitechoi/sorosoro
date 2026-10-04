@@ -72,6 +72,9 @@ public class Fabric extends BaseTimeEntity {
     @Column(name = "material_composition", columnDefinition = "TEXT")
     private String materialComposition;
 
+    @Column(name = "has_product_photo", nullable = false)
+    private boolean hasProductPhoto;
+
     @Column(name = "memo", columnDefinition = "TEXT")
     private String memo;
 
@@ -141,5 +144,25 @@ public class Fabric extends BaseTimeEntity {
         if (productUrl == null) productUrl = url;
         if (materialComposition == null) materialComposition = material;
         if (width == null) width = fabricWidth;
+    }
+
+    public void productPhotoSaved() {
+        hasProductPhoto = true;
+    }
+
+    public boolean detailsComplete() {
+        return hasProductPhoto
+                && materialComposition != null
+                && !materialComposition.isBlank()
+                && width != null
+                && !width.isBlank();
+    }
+
+    public void clearGeneratedDetails(
+            boolean materialLocked, boolean widthLocked, boolean urlLocked) {
+        hasProductPhoto = false;
+        if (!materialLocked) materialComposition = null;
+        if (!widthLocked) width = null;
+        if (!urlLocked) productUrl = null;
     }
 }

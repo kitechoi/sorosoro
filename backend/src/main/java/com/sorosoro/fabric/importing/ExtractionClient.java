@@ -39,6 +39,8 @@ public class ExtractionClient {
         request.put("seller", work.seller());
         request.put("productName", work.name());
         request.put("productCode", work.productCode());
+        request.put("color", work.color());
+        request.put("size", work.size());
         return post("/enrich", request);
     }
 

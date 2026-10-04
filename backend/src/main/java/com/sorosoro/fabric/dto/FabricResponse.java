@@ -24,6 +24,7 @@ public record FabricResponse(
         Integer rating,
         RepurchaseIntention repurchaseIntention,
         String thumbnailUrl,
+        boolean detailsComplete,
         LocalDateTime createdAt,
         LocalDateTime updatedAt) {
     public static FabricResponse from(Fabric f) {
@@ -44,7 +45,8 @@ public record FabricResponse(
                 f.getMemo(),
                 f.getRating(),
                 f.getRepurchaseIntention(),
-                null,
+                f.isHasProductPhoto() ? "/api/v1/fabrics/" + f.getId() + "/product-photo" : null,
+                f.detailsComplete(),
                 f.getCreatedAt(),
                 f.getUpdatedAt());
     }
